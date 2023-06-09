@@ -2,6 +2,8 @@
 ### Introduction
 A proof of concept project. Explore whether we can remotely control LV5600 waveform monitor, change settings, capture waveform, and ultimately analyze it.
 
+### Directory
+```
 ├── LV5600 Automation
 │   ├── automation_scripts
 │   │   ├── __init__.py
@@ -17,4 +19,6 @@ A proof of concept project. Explore whether we can remotely control LV5600 wavef
 │       ├── ftp_client.py
 │       └── telnet_client.py
 └── app.py
+```
+
 
