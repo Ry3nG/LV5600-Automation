@@ -2,33 +2,92 @@ import asyncio
 import logging
 import telnetlib3
 
+from Constants import Constants
+
 class TelnetClient:
-    def __init__(self, credential, command=None):
-        self.credential = credential
-        self.command = command
-        self.wait_time = 0.1
-        self.end_string = "$"
-        self.timeout = 10 # seconds
+    def __init__(self, host, port, username, password):
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
+        self.reader = None
+        self.writer = None
+        self.end_string = Constants.TELNET_END_STRING
 
-    async def login(self, reader, writer):
-        await reader.readuntil(b"login: ")
-        writer.write(self.credential.username + "\r\n")
-        await reader.readuntil(b"Password: ")
-        writer.write(self.credential.password + "\r\n")
-        await asyncio.sleep(self.wait_time)
-
-    async def send_command(self, command=None):
-        if command is not None:
-            self.command = command
-
+    async def connect(self):
         try:
-            reader, writer = await asyncio.wait_for(telnetlib3.open_connection(self.credential.ip_address, 23), timeout=self.timeout)
-            await self.login(reader, writer)
-            #logging.info("Sending command: %s", self.command)
-            writer.write(self.command + "\r\n")
-            #output = await asyncio.wait_for(reader.readuntil(self.end_string.encode('ascii')), timeout=self.timeout)
-            #logging.info('Server output: %s', output.decode('ascii'))
-        except asyncio.TimeoutError:
-            logging.error("Timeout while connecting or executing the command")
+            self.reader, self.writer = await telnetlib3.open_connection(self.host, self.port)
+            await self.login()
         except Exception as e:
-            logging.error("Failed to connect or execute the command. Error: %s", str(e))
+            logging.error(f"Error while connecting: {e}")
+
+    async def login(self):
+        try:
+            self.writer.write(self.username + '\r\n')
+            await self.reader.readuntil(b'Password:')
+            self.writer.write(self.password + '\r\n')
+            await self.reader.readuntil(self.end_string)
+        except Exception as e:
+            logging.error(f"Error while Login: {e}")
+
+
+    async def send_command(self, command):
+        self.writer.write(command + '\r\n')
+        try:
+            response = await self.reader.readuntil(self.end_string)
+            
+        except asyncio.IncompleteReadError:
+            logging.error("Error while reading response: IncompleteReadError")
+            # read some bytes 
+            response = await self.reader.read(20)
+            logging.info(f"The response is: {response}")
+        
+        except Exception as e:
+            logging.error(f"Error while reading response: {e}")
+            response = None
+            
+        return response
+
+    async def close(self):
+        try:
+            self.writer.close()
+        
+        except Exception as e:
+            logging.error(f"Error while closing connection: {e}")
+
+    async def run_in_terminal(telnet_client):
+        client = telnet_client
+        try:
+            await client.connect()
+            while True:
+                command = input("Enter a command (or 'quit' to quit): ")
+                if command.lower() == 'quit':
+                    break
+                response = await client.send_command(command)
+                if response:
+                    print(response)
+                else:
+                    print("Error occurred while sending command.")
+        except Exception as e:
+            logging.error(f"Error: {e}")
+        finally:
+            await client.close()
+            print("Session terminated.")
+
+'''
+async def run():
+    client = TelnetClient(Constants.IP_ADDRESS_TELNET, Constants.TELNET_PORT, Constants.USERNAME_TELNET, Constants.PASSWORD_TELNET)
+    await client.connect()
+
+    while True:
+        command = input("Enter a command (or 'quit' to quit): ")
+        if command.lower() == 'quit':
+            break
+        response = await client.send_command(command)
+        print(response)
+
+    print("Session terminated.")
+    await client.close()
+
+asyncio.run(run())
+'''
