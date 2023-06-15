@@ -1,4 +1,5 @@
 import logging
+from time import sleep
 from utils.telnet_client import TelnetClient
 from utils.ftp_client import FTPClient
 import asyncio
@@ -39,10 +40,12 @@ async def main():
         return
 
     while True:
-        logging.info("Menu:")
-        logging.info("1. Capture and send bmp")
-        logging.info("2. Recall preset")
-        logging.info("3. Quit")
+        print("Menu:")
+        print("1. Capture and send bmp")
+        print("2. Recall preset")
+        print("3. Command-line")
+        print("4. Capture multiple to path")
+        print("5. Quit")
 
         choice = input("Enter your choice: ")
 
@@ -56,13 +59,41 @@ async def main():
             preset_number = input("Enter preset number: ")
             try:
                 await change_preset.run(telnet_client, preset_number)
-                logging.info("Preset changed.")
+                logging.info("Recalled preset: "+preset_number)
             except Exception as e:
                 logging.error(f"Failed to change preset: {e}")
         elif choice == "3":
-            logging.info("Exiting.")
+            while True:
+                command = input("Enter command: ")
+                if command == "exit":
+                    break
+                try:
+                    await telnet_client.send_command(command)
+                    logging.info("Command \""+command+"\" sent.")
+                except Exception as e:
+                    logging.error(f"Failed to send command: {e}")
+        elif choice == "4":
+            while True:
+                number_of_captures = input("Enter number of captures: ")
+                if number_of_captures == "exit":
+                    break
+                
+                # loop through the number of captures
+                # each time, append the number to the file name
+                # and send the command
+                for i in range(int(number_of_captures)):
+                    file_name = "UnderSaturatedFar"+str(i)+".bmp"
+                    file_path = "E:\\Data\\TestSet\\UnderSaturated" + "\\" + file_name
+                    try:
+                        await capture_and_send.capture_and_send_bmp_to_name_path(telnet_client, ftp_client, file_path)
+                        logging.info("Sending number "+str(i+1)+" of "+number_of_captures+" bmps.")
+                    except Exception as e:
+                        logging.error(f"Failed to capture and send bmp: {e}")
+
+        elif choice == "5":
+            logging.info("Exiting the applicaion.")
             try:
-                ftp_client.close()
+                ftp_client.close() 
                 await telnet_client.close()
                 logging.info("Closed connections.")
             except Exception as e:
