@@ -7,6 +7,14 @@ from Constants import Constants
 import scripts.capture_and_send as capture_and_send
 import scripts.change_preset as change_preset
 
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+import os
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
+
 # configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -45,7 +53,8 @@ async def main():
         print("2. Recall preset")
         print("3. Command-line")
         print("4. Capture multiple to path")
-        print("5. Quit")
+        print("5. Capture and analyze")
+        print("6. Quit")
 
         choice = input("Enter your choice: ")
 
@@ -89,8 +98,42 @@ async def main():
                         logging.info("Sending number "+str(i+1)+" of "+number_of_captures+" bmps.")
                     except Exception as e:
                         logging.error(f"Failed to capture and send bmp: {e}")
-
         elif choice == "5":
+            # step 1 first capture an image
+            try:
+                await capture_and_send.capture_and_send_bmp(telnet_client, ftp_client)
+                logging.info("Captured and sent bmp.")
+            except Exception as e:
+                logging.error(f"Failed to capture and send bmp: {e}")
+            # load model to analyze
+            model_dir = "E:\\Model\\"
+            model_name = 'model_20_20230615-134651.h5'
+            image_dir = "E:\\Leader LV5600\\LV5600 Automation\\output\\CAP_BMP.bmp"
+            buffer_dir = "E:\\Leader LV5600\\LV5600 Automation\\output\\buffer"
+            img_width,img_height = 240,670
+            x_start,x_end,y_start,y_end = 600,1270,60,300
+            model = load_model(os.path.join(model_dir,model_name))
+            os.makedirs(os.path.join(buffer_dir),exist_ok=True)
+            img = cv2.imread(image_dir)
+            img_roi = img[y_start:y_end,x_start:x_end]
+            cv2.imwrite(buffer_dir+"\\buffer.bmp",img_roi)
+            img = image.load_img(buffer_dir+"\\buffer.bmp",target_size=(img_width,img_height))
+            img = image.img_to_array(img)
+            img = np.expand_dims(img,axis=0)
+            img = img/255
+            prediction = model.predict(img)
+            class_ = np.argmax(prediction,axis=1)
+            if class_ == 0:
+                class_name = "Just Saturated"
+            elif class_ == 1:
+                class_name = "Over Saturated"
+            elif class_ == 2:
+                class_name = "Under Saturated"
+            else:
+                class_name = "Unknown"
+            print("The image is: "+class_name)
+
+        elif choice == "6":
             logging.info("Exiting the applicaion.")
             try:
                 ftp_client.close() 
