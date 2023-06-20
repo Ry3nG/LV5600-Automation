@@ -18,11 +18,11 @@ class Constants:
 
     # for Capture and storage
     FTP_FILE_NAME_BMP = "cap_bmp.bmp"
-    LOCAL_FILE_PATH_BMP = "E:\\M15_PoC\\LV5600 Automation\\output\\CAP_BMP.bmp"
-    LOCAL_BUFFER_PATH = "E:\\M15_PoC\\LV5600 Automation\\output\\buffer\\"
+    LOCAL_FILE_PATH_BMP = "E:\\M15\\Leader LV5600 PoC\\LV5600 Automation\\output\\CAP_BMP.bmp"
+    LOCAL_BUFFER_PATH = "E:\\M15\\Leader LV5600 PoC\\LV5600 Automation\\output\\buffer\\"
 
     # model
-    MODEL_PATH = "E:\\M15_PoC\\Models\\"
+    MODEL_PATH = "E:\\M15\\Leader LV5600 PoC\\Models\\"
     WLI_MODEL_NAME = "model_20_20230615-134651.h5"
 
     # CNN Testing
@@ -33,11 +33,12 @@ class Constants:
 
     # dataset directory
     # WLI
-    PATH_WLI_DATASET_RAW = "E:\\M15_PoC\\Dataset\\WLI Dataset\\RAW\\"
-    PATH_WLI_TESTSET = "E:\\M15_PoC\\Dataset\\WLI Dataset\\TestSet\\"
-    PATH_WLI_FAILED = "E:\\M15_PoC\\Dataset\\WLI Dataset\\Failed Testset\\"
-    PATH_WLI_BUFFER = "E:\\M15_PoC\\Dataset\\WLI Dataset\\PreprocessingBuffer\\"
+    PATH_WLI_DATASET_RAW = "E:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\RAW\\"
+    PATH_WLI_TESTSET = "E:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\TestSet\\"
+    PATH_WLI_FAILED = "E:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\Failed Testset\\"
+    PATH_WLI_BUFFER = "E:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\PreprocessingBuffer\\"
     # Noise
-    PATH_NOISE_DATASET_RAW = "E:\\M15_PoC\\Dataset\\Noise Dataset\\RAW\\"
+    PATH_NOISE_DATASET_RAW = "E:\\M15\\Leader LV5600 PoC\\Dataset\\Noise Dataset\\RAW\\"
     # RDI
-    PATH_RDI_DATASET_RAW = "E:\\M15_PoC\\Dataset\\RDI Dataset\\RAW\\"
+    PATH_RDI_DATASET_RAW = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\RAW\\"
+    PATH_RDI_DATASET_PREPROCESSED = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\Preprocessed\\"
