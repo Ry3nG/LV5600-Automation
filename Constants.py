@@ -18,13 +18,14 @@ class Constants:
 
     # for Capture and storage
     FTP_FILE_NAME_BMP = "cap_bmp.bmp"
-    LOCAL_FILE_PATH_BMP = "E:\\Leader LV5600\\LV5600 Automation\\output\\CAP_BMP.bmp"
-
-    # for waveform analysis
-    TEST_DATASET_PATH = "E:\\Data\\TestSet\\"
-    TEST_CATEGORIES = ['OverSaturated', 'UnderSaturated', 'JustSaturated']
-
-    MODEL_PATH = 'E:\\Model\\'
+    LOCAL_FILE_PATH_BMP = "E:\\M15_PoC\\LV5600 Automation\\output\\CAP_BMP.bmp"
+    LOCAL_BUFFER_PATH = "E:\\M15_PoC\\LV5600 Automation\\output\\buffer\\"
+    
+    
+    # model
+    MODEL_PATH = 'E:\\M15_PoC\\Models\\'
+    WLI_MODEL_NAME = 'model_20_20230615-134651.h5'
+    
     CNN_PREPROCESSING_BUFFER_PATH = 'E:\\Data\\PreprocessingBuffer\\'
     FAILED_TESTCASES_PATH = "E:\\Data\\Failed Testset\\"
     CROPPED_DATASET_PATH = 'E:\\Data\\LargeSet\\Cropped\\'

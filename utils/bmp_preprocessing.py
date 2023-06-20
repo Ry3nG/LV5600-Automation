@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import sys
 
 # Define the path to the main directory
-main_dir = "E:\\RDI Dataset\\"
+main_dir = ""
 
 # Region of Interest (ROI) coordinates
 x_start, x_end, y_start, y_end = 600, 1270, 60, 300
@@ -28,15 +28,19 @@ def handle_cropping(image_dir, cropped_dir):
             # Save the cropped image in the cropped directory
             cv2.imwrite(os.path.join(cropped_dir, file), img_cropped)
 
-# Loop through each subdirectory in the main directory
-for subdir in os.listdir(main_dir):
-    subdir_path = os.path.join(main_dir, subdir)
-    
-    # Check if the path is a directory
-    if os.path.isdir(subdir_path):
-        # Define the paths to the image directory and the cropped directory
-        image_dir = subdir_path
-        cropped_dir = os.path.join(subdir_path, "cropped")
-        
-        # Handle the cropping for this directory
-        handle_cropping(image_dir, cropped_dir)
+def main():
+    # Loop through each subdirectory in the main directory
+    for subdir in os.listdir(main_dir):
+        subdir_path = os.path.join(main_dir, subdir)
+
+        # Check if the path is a directory
+        if os.path.isdir(subdir_path):
+            # Define the paths to the image directory and the cropped directory
+            image_dir = subdir_path
+            cropped_dir = os.path.join(subdir_path, "cropped")
+
+            # Handle the cropping for this directory
+            handle_cropping(image_dir, cropped_dir)
+
+if __name__ == "__main__":
+    main()

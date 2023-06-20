@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-class noiseClassifier:
+class NoiseClassifier:
 
     def __init__(self, lower_bound=0.5, upper_bound=1.5):
         self.lower_bound = lower_bound

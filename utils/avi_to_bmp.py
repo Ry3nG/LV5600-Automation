@@ -2,7 +2,7 @@ import cv2
 import os
 
 # The path to your videos
-video_path = "E:\\RDI Dataset"
+video_path = ""
 
 for i in range(1, 71):
     # Create folder name
