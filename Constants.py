@@ -20,20 +20,24 @@ class Constants:
     FTP_FILE_NAME_BMP = "cap_bmp.bmp"
     LOCAL_FILE_PATH_BMP = "E:\\M15_PoC\\LV5600 Automation\\output\\CAP_BMP.bmp"
     LOCAL_BUFFER_PATH = "E:\\M15_PoC\\LV5600 Automation\\output\\buffer\\"
-    
-    
+
     # model
-    MODEL_PATH = 'E:\\M15_PoC\\Models\\'
-    WLI_MODEL_NAME = 'model_20_20230615-134651.h5'
-    
-    CNN_PREPROCESSING_BUFFER_PATH = 'E:\\Data\\PreprocessingBuffer\\'
-    FAILED_TESTCASES_PATH = "E:\\Data\\Failed Testset\\"
-    CROPPED_DATASET_PATH = 'E:\\Data\\LargeSet\\Cropped\\'
+    MODEL_PATH = "E:\\M15_PoC\\Models\\"
+    WLI_MODEL_NAME = "model_20_20230615-134651.h5"
 
-    OVERSATURATED_DATASET_PATH = 'E:\\Data\\LargeSet\\OverSaturated'
-    UNDERSATURATED_DATASET_PATH = 'E:\\Data\\LargeSet\\UnderSaturated'
-    JUSTSATURATED_DATASET_PATH = 'E:\\Data\\LargeSet\\JustSaturated'
+    # CNN Testing
+    CNN_IMAGE_SIZE = (670, 240)
+    ROI_COORDINATES = (600, 1270, 60, 300)
+    CATEGORY_DICT = {0: "JustSaturated", 1: "OverSaturated", 2: "UnderSaturated"}
+    TEST_CATEGORIES = ["OverSaturated", "UnderSaturated", "JustSaturated"]
 
-    OVERSATURATED_CROPPED_DATASET_PATH = 'E:\\Data\\LargeSet\\Cropped\\OverSaturated'
-    UNDERSATURATED_CROPPED_DATASET_PATH = 'E:\\Data\\LargeSet\\Cropped\\UnderSaturated'
-    JUSTSATURATED_CROPPED_DATASET_PATH = 'E:\\Data\\LargeSet\\Cropped\\JustSaturated'
+    # dataset directory
+    # WLI
+    PATH_WLI_DATASET_RAW = "E:\\M15_PoC\\Dataset\\WLI Dataset\\RAW\\"
+    PATH_WLI_TESTSET = "E:\\M15_PoC\\Dataset\\WLI Dataset\\TestSet\\"
+    PATH_WLI_FAILED = "E:\\M15_PoC\\Dataset\\WLI Dataset\\Failed Testset\\"
+    PATH_WLI_BUFFER = "E:\\M15_PoC\\Dataset\\WLI Dataset\\PreprocessingBuffer\\"
+    # Noise
+    PATH_NOISE_DATASET_RAW = "E:\\M15_PoC\\Dataset\\Noise Dataset\\RAW\\"
+    # RDI
+    PATH_RDI_DATASET_RAW = "E:\\M15_PoC\\Dataset\\RDI Dataset\\RAW\\"
