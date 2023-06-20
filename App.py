@@ -16,6 +16,7 @@ from scripts.capture_classify_show import capture_classify_show
 from scripts.auto_adjust_lighting import adjust_lighting
 from scripts.classify_noise import classify_noise
 from scripts.tune_to_target_light_level import tune_to_target_level
+from scripts.auto_adjust_using_saturation_level import auto_adjust_using_saturation_level
 
 
 # configure logging
@@ -73,6 +74,7 @@ async def main():
         print("6. Auto adjust")
         print("7. Capture and classify Noise")
         print("8. Adjust Brightness using Debug Console")
+        print("9. Auto adjust using saturation value")
         print("0. Quit")
 
         choice = input("Enter your choice: ")
@@ -93,7 +95,7 @@ async def main():
         elif choice == "5":
             await capture_classify_show(telnet_client, ftp_client)
         elif choice == "6":
-            current_level = input("Enter current brightness level: ")
+            current_level = int(input("Enter current brightness level: "))
             await adjust_lighting(
                 telnet_client, ftp_client, debugConsoleController, current_level
             )
@@ -108,6 +110,14 @@ async def main():
 
         elif choice == "8":
             tune_to_target_level(debugConsoleController)
+        
+        elif choice == "9":
+            print("Please set to oversaturated level and press enter")
+            input()
+            current_level = int(input("Enter current brightness level: "))
+            await auto_adjust_using_saturation_level(
+                telnet_client, ftp_client, debugConsoleController, current_level
+            )
 
         elif choice == "0":
             logging.info("Exiting the applicaion.")

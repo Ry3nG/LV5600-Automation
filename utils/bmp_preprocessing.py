@@ -2,12 +2,13 @@ import os
 import cv2
 import matplotlib.pyplot as plt
 import sys
+from Constants import Constants
 
 # Define the path to the main directory
 main_dir = ""
 
 # Region of Interest (ROI) coordinates
-x_start, x_end, y_start, y_end = 600, 1270, 60, 300
+x_start, x_end, y_start, y_end = Constants.ROI_COORDINATES
 
 # Function to handle cropping
 def handle_cropping(image_dir, cropped_dir):

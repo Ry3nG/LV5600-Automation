@@ -30,8 +30,8 @@ async def capture_classify_show(telnet_client, ftp_client):
     model_name = Constants.WLI_MODEL_NAME
     image_dir = Constants.LOCAL_FILE_PATH_BMP
     buffer_dir = Constants.LOCAL_BUFFER_PATH
-    img_width, img_height = 240, 670
-    x_start, x_end, y_start, y_end = 600, 1270, 60, 300
+    img_height, img_width = Constants.CNN_IMAGE_SIZE
+    x_start, x_end, y_start, y_end = Constants.ROI_COORDINATES
     model = load_model(os.path.join(model_dir, model_name))
     os.makedirs(os.path.join(buffer_dir), exist_ok=True)
     img = cv2.imread(image_dir)

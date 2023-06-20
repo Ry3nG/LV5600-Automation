@@ -17,9 +17,9 @@ async def adjust_lighting(telnet_client, ftp_client, debugConsoleController, cur
     except Exception as e:
         logging.error(f"Failed to change preset: {e}")
 
-    print("Set brightness to 10 first")
-    target_level = 10
-    debugConsoleController.tune_to_target_level(target_level,int(current_level))
+    #print("Set brightness to 10 first")
+    #target_level = 10
+    #debugConsoleController.tune_to_target_level(target_level,int(current_level))
 
     sleep(1)
 

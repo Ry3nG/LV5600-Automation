@@ -20,7 +20,7 @@ class NoiseClassifier:
     def classify_image(self, file_path):
         img = cv2.imread(file_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        roi = img[150:780,400:1520]
+        roi = img[150:780,400:1520] # 630 x 1120
         height, width = roi.shape[:2]
         red_pixels = [(x, y) for x in range(width) for y in range(height) if roi[y, x, 0] > roi[y, x, 1] and roi[y, x, 0] > roi[y, x, 2]]
         green_pixels = [(x, y) for x in range(width) for y in range(height) if roi[y, x, 1] > roi[y, x, 0] and roi[y, x, 1] > roi[y, x, 2]]
