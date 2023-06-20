@@ -1,24 +1,5 @@
 # LV5600-Automation
 ### Introduction
-A proof of concept project. Explore whether we can remotely control LV5600 waveform monitor, change settings, capture waveform, and ultimately analyze it.
+A proof of concept project, to automate the LV5600 waveform monitor. The project establish telnet and ftp connection with the Leader LV5600 waveform monitor, enabling remote control and file retrival.
 
-### Directory
-```
-├── LV5600 Automation
-│   ├── automation_scripts
-│   │   ├── __init__.py
-│   │   └── capture_and_send.py
-│   ├── commands
-│   │   ├── __init__.py
-│   │   ├── input_command.py
-│   │   ├── preset_command.py
-│   │   └── capture_command.py
-│   └── utils
-│       ├── __init__.py
-│       ├── credential.py
-│       ├── ftp_client.py
-│       └── telnet_client.py
-└── app.py
-```
-
-
+The project also utilizes Tensorflow.keras to train a CNN model to classify the waveform monitor's capture. 
