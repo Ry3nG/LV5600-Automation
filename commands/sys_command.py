@@ -10,3 +10,8 @@ def set_backlight_level(input):
         return None
     
     return "SYS:LCD:BACKLIGHT " + str(input)
+"""
+    initialize 
+"""
+def system_initialize():
+    return "SYS:INITIALIZE:ALL"

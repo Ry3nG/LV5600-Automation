@@ -16,6 +16,14 @@ class Constants:
     USERNAME_TELNET = "LV5600"
     PASSWORD_TELNET = "LV5600"
 
+    # for initialization
+    BACKLIGHT_LEVEL = 32
+    LINE_NUMBER = 580
+    WFM_ROI_COORDINATES_X1 = 93
+    WFM_ROI_COORDINATES_X2 = 775
+    WFM_ROI_COORDINATES_Y1 = 755
+    WFM_ROI_COORDINATES_Y2 = 1745
+
     # for Capture and storage
     FTP_FILE_NAME_BMP = "cap_bmp.bmp"
     LOCAL_FILE_PATH_BMP = "E:\\M15\\Leader LV5600 PoC\\LV5600 Automation\\output\\CAP_BMP.bmp"
@@ -24,10 +32,11 @@ class Constants:
     # model
     MODEL_PATH = "E:\\M15\\Leader LV5600 PoC\\Models\\"
     WLI_MODEL_NAME = "model_20_20230615-134651.h5"
+    RDI_MODEl_NAME = "RDI-Model-20K.h5"
 
     # CNN Testing
     CNN_IMAGE_SIZE = (670, 240)
-    ROI_COORDINATES = (600, 1270, 60, 300)
+    ROI_COORDINATES = (920, 1590, 60, 300)
     CATEGORY_DICT = {0: "JustSaturated", 1: "OverSaturated", 2: "UnderSaturated"}
     TEST_CATEGORIES = ["OverSaturated", "UnderSaturated", "JustSaturated"]
 
@@ -42,3 +51,6 @@ class Constants:
     # RDI
     PATH_RDI_DATASET_RAW = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\RAW\\"
     PATH_RDI_DATASET_PREPROCESSED = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\Preprocessed\\"
+    PATH_RDI_TESTSET = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\test"   
+    PATH_RDI_FAILED = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\failed"
+    PATH_RDI_BUFFER = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\buffer"

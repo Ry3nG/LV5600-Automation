@@ -6,14 +6,6 @@ from utils.noise_classifier import NoiseClassifier
 
 async def classify_noise(telnet_client, ftp_client, preset_number, file_path):
     try:
-        await recall_preset(telnet_client, preset_number)
-        logging.info(f"Recalled preset {preset_number}.")
-    except Exception as e:
-        logging.error(f"Failed to recall preset {preset_number}: {e}")
-
-    sleep(1)
-
-    try:
         await capture_and_send_bmp(telnet_client, ftp_client)
         logging.info("Captured and sent bmp.")
     except Exception as e:

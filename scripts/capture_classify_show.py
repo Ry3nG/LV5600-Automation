@@ -11,14 +11,6 @@ from time import sleep
 from Constants import Constants
 
 async def capture_classify_show(telnet_client, ftp_client):
-    # recall preset 1
-    try:
-        await recall_preset(telnet_client, "1")
-        logging.info("Recalled preset: 1")
-    except Exception as e:
-        logging.error(f"Failed to change preset: {e}")
-
-    sleep(1)
     try:
         await capture_and_send_bmp(telnet_client, ftp_client)
         logging.info("Captured and sent bmp.")
@@ -30,15 +22,15 @@ async def capture_classify_show(telnet_client, ftp_client):
     model_name = Constants.WLI_MODEL_NAME
     image_dir = Constants.LOCAL_FILE_PATH_BMP
     buffer_dir = Constants.LOCAL_BUFFER_PATH
-    img_width, img_height = 240, 670
-    x_start, x_end, y_start, y_end = 600, 1270, 60, 300
+    img_width, img_height = Constants.CNN_IMAGE_SIZE
+    x_start, x_end, y_start, y_end = Constants.ROI_COORDINATES
     model = load_model(os.path.join(model_dir, model_name))
     os.makedirs(os.path.join(buffer_dir), exist_ok=True)
     img = cv2.imread(image_dir)
     img_roi = img[y_start:y_end, x_start:x_end]
     cv2.imwrite(buffer_dir + "\\buffer.bmp", img_roi)
     img = image.load_img(
-        buffer_dir + "\\buffer.bmp", target_size=(img_width, img_height)
+        buffer_dir + "\\buffer.bmp", target_size=(img_height, img_width)
     )
     img = image.img_to_array(img)
     img = np.expand_dims(img, axis=0)
