@@ -18,7 +18,7 @@ from scripts.classify_noise import classify_noise
 from scripts.tune_to_target_light_level import tune_to_target_level
 from scripts.lv5600_initialization import lv5600_initialization, LV5600InitializationError
 from scripts.auto_white_balance import auto_white_balance
-from scripts.capture_and_classify_with_initialize import auto_adjust, display_result
+from scripts.capture_and_classify_with_initialize import auto_adjust, display_result, auto_tune_with_loopbreak
 # configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -110,8 +110,18 @@ async def main():
         elif choice == "5":
             await display_result(telnet_client, ftp_client)
         elif choice == "6":
+            try:
+                await lv5600_initialization(telnet_client)
+                logging.info("LV5600 initialized.")
+            except LV5600InitializationError as e:
+                logging.error("LV5600 Initialization error: "+str(e))
+            except Exception as e:
+                logging.error(f"An unexpected error occurred: {e}")
+                await telnet_client.close()
+                return
             current_brightness = int(input("Enter current brightness: "))
-            await auto_adjust(telnet_client, ftp_client,debugConsoleController,current_brightness)
+            #await auto_adjust(telnet_client, ftp_client,debugConsoleController,current_brightness)
+            await auto_tune_with_loopbreak(telnet_client, ftp_client,debugConsoleController,current_brightness)
 
         elif choice == "7":
             preset_number = 5
