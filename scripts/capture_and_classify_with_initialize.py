@@ -1,3 +1,5 @@
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
 from .capture_and_send_bmp import capture_and_send_bmp
 from .lv5600_initialization import lv5600_initialization, LV5600InitializationError
 from commands import wfm_command
@@ -6,9 +8,10 @@ import matplotlib.pyplot as plt
 import cv2
 import os
 import logging
+import collections
 from time import sleep
 from Constants import Constants
-average_count = 5
+average_count = 3
 
 async def calculate_middle_cyan_y(image) -> float:
     lower_cyan_range = np.array([0, 200, 200])
@@ -26,15 +29,6 @@ async def calculate_middle_cyan_y(image) -> float:
 
 async def capture_classify_show_with_initialize(telnet_client, ftp_client):
     try:    
-        try:
-            await lv5600_initialization(telnet_client)
-            logging.info("LV5600 initialized.")
-        except LV5600InitializationError as e:
-            logging.error("LV5600 Initialization error: "+str(e))
-            return
-        except Exception as e:
-            logging.error(f"An unexpected error occurred: {e}")
-            return
 
         # turn off the WFM SCALE
         try:
@@ -97,10 +91,10 @@ async def capture_classify_show_with_initialize(telnet_client, ftp_client):
     if(mv_value > 769.5):
         # oversaturated
         class_ = "Oversaturated"
-    elif(768<=mv_value <= 769.5):
+    elif(766.5<=mv_value <= 769.5):
         # saturated
         class_ = "Saturated"
-    elif(0<=mv_value < 768):
+    elif(0<=mv_value < 766.5):
         # undersaturated
         class_ = "Undersaturated"
     else:
@@ -177,3 +171,81 @@ async def auto_adjust(telnet_client, ftp_client, debugConsoleController, current
 
             if current_mv_value >= target_mv_level:
                 break  # exit the while loop if the target_mv_level is reached
+
+async def auto_tune_with_loopbreak(telnet_client, ftp_client, debugConsoleController, current_brightness):
+    class_name = None
+
+    mv_values = []
+    light_levels = []
+    current_light_level = current_brightness  # Init with current brightness
+    #debugConsoleController.tune_to_target_level(0, current_light_level)
+    #current_light_level = 0
+    light_history = collections.deque(maxlen=3)
+
+    target_mv_level = 700
+
+    while class_name != "Saturated":
+        class_name, current_mv_value = await capture_classify_show_with_initialize(telnet_client, ftp_client)
+
+        # add the current light level to the history
+        light_history.append(current_light_level)
+
+        # check if the last 3 light level values are oscillating
+        if len(light_history) == 3 and len(set(light_history))==2:
+            print("Possible oscillation detected, breaking the loop")
+            await prompt_manual_adjustment()
+            # pop all from the deque
+            light_history.clear()
+            continue
+            
+        if len(mv_values) < 2 or current_mv_value >= target_mv_level:
+            # single step adjustment
+            mv_values.append(current_mv_value)
+            light_levels.append(current_light_level)
+
+            if class_name == "Oversaturated":
+                print("Oversaturated, turning down the brightness")
+                debugConsoleController.tune_down_light()
+                current_light_level -= 1  
+            elif class_name == "Undersaturated":
+                print("Undersaturated, turning up the brightness")
+                debugConsoleController.tune_up_light()
+                current_light_level += 1 
+            elif class_name == "Saturated":
+                print("Saturated")
+            else:
+                print("Unknown saturation level")
+        else:
+            # fit polynomial regression model and predict light level to reach target_mv_level
+            poly = PolynomialFeatures(degree=2)
+            X = poly.fit_transform(np.array(mv_values).reshape(-1, 1))
+            model = LinearRegression().fit(X, light_levels)
+            predicted_light_level = model.predict(poly.fit_transform(np.array(target_mv_level).reshape(-1, 1)))[0]
+            if predicted_light_level < 0:
+                predicted_light_level = current_light_level+1
+            if predicted_light_level- current_light_level > 10:
+                predicted_light_level = current_light_level + 10
+            if predicted_light_level + current_light_level > 255:
+                predicted_light_level = 255 - current_light_level
+
+            print("Adjusting brightness to target level"+str(predicted_light_level))
+            debugConsoleController.tune_to_target_level(int(predicted_light_level), current_light_level)
+
+            # Update current_light_level
+            current_light_level = int(predicted_light_level)
+
+            # reset mv_values and light_levels for the next prediction if necessary
+            mv_values = []
+            light_levels = []
+
+            if current_mv_value >= target_mv_level:
+                break  # exit the while loop if the target_mv_level is reached
+
+async def prompt_manual_adjustment():
+    while True:
+        user_input = input("Please manually adjust the brightness and enter 'y' to continue: ")
+        if user_input == "y":
+            break
+        else:
+            print("Invalid input, please try again")
+    
