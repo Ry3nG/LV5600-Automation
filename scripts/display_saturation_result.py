@@ -8,6 +8,7 @@ import logging
 import collections
 from time import sleep
 from Constants import Constants
+from utils.peak_pixel_detection_util import get_cursor_and_mv, classify_mv_level
 average_count = 3
 
 async def display_result(telnet_client, ftp_client):
@@ -21,6 +22,7 @@ async def display_result(telnet_client, ftp_client):
     image = image[Constants.WFM_ROI_COORDINATES_X1:Constants.WFM_ROI_COORDINATES_X2, Constants.WFM_ROI_COORDINATES_Y1:Constants.WFM_ROI_COORDINATES_Y2]
     plt.imshow(image)
 
-    saturation_level, mv_value = await get_cursor_and_mv(telnet_client, ftp_client)
-    plt.title(str(saturation_level) + " " + str(mv_value))
+    current_mv_value = await get_cursor_and_mv(telnet_client, ftp_client,"SAT")
+    saturation_class = classify_mv_level(current_mv_value,769.5,766.5)
+    plt.title(str(saturation_class) + " " + str(current_mv_value))
     plt.show()

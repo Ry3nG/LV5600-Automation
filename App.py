@@ -16,13 +16,14 @@ from scripts.lv5600_initialization import (
     lv5600_initialization,
     LV5600InitializationError,
 )
-from scripts.display_saturation_result import display_result
+from scripts.display_saturation_result import (
+    display_result
+)
 from scripts.auto_tuning_use_peak_pixel import (
     auto_adjust,
     white_balance_auto_detect,
-    noise_level_auto_adjust,
+    noise_level_auto_adjust
 )
-
 # configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -54,17 +55,11 @@ def log_error(error_message, error_severity, error_log_list):
         logging.info(log)
     error_log_list.clear()
 
-
-async def handle_noise_level_auto_adjust(
-    telnet_client, ftp_client, debugConsoleController, n1_mv_value
-):
+async def handle_noise_level_auto_adjust(telnet_client, ftp_client,debugConsoleController, n1_mv_value):
     if n1_mv_value != -1:
-        return await noise_level_auto_adjust(
-            telnet_client, ftp_client, debugConsoleController, n1_mv_value
-        )
+        return await noise_level_auto_adjust(telnet_client, ftp_client,debugConsoleController, n1_mv_value)
     else:
         print("Please run option 9 first")
-
 
 async def main():
     cleanup_flag = False
@@ -125,45 +120,29 @@ async def main():
         return
 
     menu_options = {
-        "1": lambda: capture_and_send_bmp(
-            telnet_client, ftp_client
-        ),  # does not have return value
-        "2": lambda: recall_preset(
-            telnet_client, input("Enter preset number: ")
-        ),  # does not have return value
-        "3": lambda: send_command(telnet_client),  # does not have return value
-        "4": lambda: capture_multiple(
-            telnet_client, ftp_client
-        ),  # does not have return value
-        "5": lambda: display_result(
-            telnet_client, ftp_client
-        ),  # does not have return value
+        "1": lambda: capture_and_send_bmp(telnet_client, ftp_client), # does not have return value
+        "2": lambda: recall_preset(telnet_client, input("Enter preset number: ")), # does not have return value
+        "3": lambda: send_command(telnet_client), # does not have return value
+        "4": lambda: capture_multiple(telnet_client, ftp_client), # does not have return value
+        "5": lambda: display_result(telnet_client, ftp_client), # does not have return value
         "6": lambda: auto_adjust(
             telnet_client,
             ftp_client,
             debugConsoleController,
             int(input("Enter current light level: ")),
-            mode="SAT",
-            target=769.5,
-            target_high_threshold=769.5,
-            target_low_threshold=766.5,
+            mode = "SAT",
+            target = 769.5,
+            target_high_threshold= 769.5,
+            target_low_threshold= 766.5,
             use_poly_prediction=True,
             jump_threshold=700,
-        ),  # does not have return value
-        "7": lambda: handle_noise_level_auto_adjust(
-            telnet_client, ftp_client, debugConsoleController, n1_mv_value
-        ),  # does not have return value
-        "8": lambda: tune_to_target_level(
-            debugConsoleController
-        ),  # does not have return value
-        "9": lambda: white_balance_auto_detect(
-            telnet_client, ftp_client
-        ),  # return the value of n1_mv
-        "10": lambda: lv5600_initialization(
-            telnet_client
-        ),  # does not have return value
+        ), # does not have return value
+        "7": lambda: handle_noise_level_auto_adjust(telnet_client, ftp_client,debugConsoleController,n1_mv_value), # does not have return value
+        "8": lambda: tune_to_target_level(debugConsoleController), # does not have return value
+        "9": lambda: white_balance_auto_detect(telnet_client, ftp_client), # return the value of n1_mv
+        "10": lambda: lv5600_initialization(telnet_client), # does not have return value
     }
-
+    
     n1_mv_value = -1
     while True:
         print("Menu:")
@@ -188,7 +167,7 @@ async def main():
             await cleanup(telnet_client, ftp_client)
             cleanup_flag = True
             break
-
+            
         try:
             if choice == "9":
                 n1_mv_value = await menu_options[choice]()

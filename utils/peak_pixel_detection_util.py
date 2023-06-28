@@ -75,7 +75,7 @@ async def prompt_manual_adjustment():
 
 
 async def get_cursor_and_mv(
-    telnet_client, ftp_client, mode, target_cursor_value=0
+    telnet_client, ftp_client, mode, target_cursor_value=11000
 ):  # mode can be "SAT" or "WB" or "NOISE"
     error_tuple = (None, None)
     try:
