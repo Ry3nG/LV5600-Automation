@@ -1,10 +1,13 @@
 import asyncio
 import logging
+from typing import Optional
 import telnetlib3
 
 from Constants import Constants
 
 class TelnetClient:
+    reader: Optional[telnetlib3.TelnetReader] = None
+    writer: Optional[telnetlib3.TelnetWriter] = None
     def __init__(self, host, port, username, password):
         self.host = host
         self.port = port
@@ -21,26 +24,42 @@ class TelnetClient:
         except Exception as e:
             logging.error(f"Error while connecting: {e}")
 
+    async def is_connected(self):
+        return self.writer is not None and not self.reader is not None
+
     async def login(self):
         try:
-            self.writer.write(self.username + '\r\n')
-            await self.reader.readuntil(b'Password:')
-            self.writer.write(self.password + '\r\n')
-            await self.reader.readuntil(self.end_string)
+            if self.writer is not None and self.reader is not None:
+                self.writer.write(self.username + '\r\n')
+                await self.reader.readuntil(b'Password:')
+                self.writer.write(self.password + '\r\n')
+                await self.reader.readuntil(self.end_string)
+            else:
+                logging.error("Error while Login: writer or reader is None")
         except Exception as e:
             logging.error(f"Error while Login: {e}")
 
 
     async def send_command(self, command):
-        self.writer.write(command + '\r\n')
+        response = None
+        if self.writer is not None and self.reader is not None:
+            self.writer.write(command + '\r\n')
+        else:
+            logging.error("Error while sending command: writer or reader is None")
         try:
-            response = await self.reader.readuntil(self.end_string)
+            if self.writer is not None and self.reader is not None:
+                response = await self.reader.readuntil(self.end_string)
+            else:
+                logging.error("Error while sending command: writer or reader is None")
             
         except asyncio.IncompleteReadError:
             logging.error("Error while reading response: IncompleteReadError")
             # read some bytes 
-            response = await self.reader.read(20)
-            logging.info(f"The response is: {response}")
+            if self.writer is not None and self.reader is not None:
+                response = await self.reader.read(20)
+                logging.info(f"The response is: {response}")
+            else:
+                logging.error("Error while reading response: writer or reader is None")
         
         except Exception as e:
             logging.error(f"Error while reading response: {e}")
@@ -50,13 +69,16 @@ class TelnetClient:
 
     async def close(self):
         try:
-            self.writer.close()
+            if self.writer is not None and self.reader is not None:
+                self.writer.close()
+            else:
+                logging.error("Error while closing connection: writer or reader is None")
         
         except Exception as e:
             logging.error(f"Error while closing connection: {e}")
 
-    async def run_in_terminal(telnet_client):
-        client = telnet_client
+    async def run_in_terminal(self):
+        client = self
         try:
             await client.connect()
             while True:

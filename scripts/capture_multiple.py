@@ -9,6 +9,10 @@ async def capture_multiple(telnet_client, ftp_client):
         if number_of_captures == "exit":
             break
 
+        if not number_of_captures.isdigit() or int(number_of_captures) <= 0:
+            print("Invalid input. Please enter a positive integer.")
+            continue
+
         # Ask user for base file name and directory path
         base_file_name = input("Enter base file name: ")
         directory_path = input("Enter directory path: ")
@@ -28,5 +32,6 @@ async def capture_multiple(telnet_client, ftp_client):
             try:
                 await capture_and_send_bmp(telnet_client, ftp_client, file_path)
                 logging.info(f"Sending number {i + 1} of {number_of_captures} bmps.")
-            except Exception as e:
+            except Exception as e:  # Replace Exception with the types of exceptions you want to handle
                 logging.error(f"Failed to capture and send bmp: {e}")
+                # Add error handling code here, if necessary
