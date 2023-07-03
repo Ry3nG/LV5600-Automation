@@ -120,4 +120,4 @@ def wfm_cursor_unit(ch,input):
             print("Invalid input. Input must be MV, P, RP, DEC, HEX or HDR.")
             return None
     
-    return "WFM:CURSOR:UNIT:Y " + input
+    return "WFM:CURSOR:UNIT:" + ch + " " + input
