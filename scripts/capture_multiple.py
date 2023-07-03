@@ -1,9 +1,24 @@
-from .capture_and_send_bmp import capture_and_send_bmp
+"""
+This module provides a function to capture multiple BMP images and send them over FTP.
+
+Functions:
+- capture_multiple: captures multiple BMP images and sends them over FTP.
+"""
 import logging
 import os
-import shutil
+from .capture_and_send_bmp import capture_and_send_bmp
 
 async def capture_multiple(telnet_client, ftp_client):
+    """
+    Captures multiple BMP images and sends them over FTP.
+
+    Args:
+    - telnet_client: a Telnet client object.
+    - ftp_client: an FTP client object.
+
+    Returns:
+    - None
+    """
     while True:
         number_of_captures = input("Enter number of captures: (type \"exit\" to exit)")
         if number_of_captures == "exit":
@@ -32,6 +47,6 @@ async def capture_multiple(telnet_client, ftp_client):
             try:
                 await capture_and_send_bmp(telnet_client, ftp_client, file_path)
                 logging.info(f"Sending number {i + 1} of {number_of_captures} bmps.")
-            except Exception as e:  # Replace Exception with the types of exceptions you want to handle
-                logging.error(f"Failed to capture and send bmp: {e}")
+            except Exception as error:  # Replace Exception with the types of exceptions you want to handle
+                logging.error(f"Failed to capture and send bmp: {error}")
                 # Add error handling code here, if necessary

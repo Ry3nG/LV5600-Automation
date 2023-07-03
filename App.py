@@ -1,3 +1,6 @@
+"""
+    The main application file.
+"""
 import logging
 import asyncio
 from utils.telnet_client import TelnetClient
@@ -16,14 +19,13 @@ from scripts.lv5600_initialization import (
     lv5600_initialization,
     LV5600InitializationError,
 )
-from scripts.display_saturation_result import (
-    display_result
-)
+from scripts.display_saturation_result import display_result
 from scripts.auto_tuning_use_peak_pixel import (
     auto_adjust,
     white_balance_auto_detect,
-    noise_level_auto_adjust
+    noise_level_auto_adjust,
 )
+
 # configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -31,37 +33,44 @@ logging.basicConfig(
 
 
 async def cleanup(telnet_client, ftp_client=None):
+    """
+    Close the Telnet and FTP connections.
+
+    Args:
+        telnet_client: The Telnet client connection.
+        ftp_client: The FTP client connection (optional).
+    """
     try:
         if telnet_client:
             await telnet_client.close()
-    except Exception as e:
-        logging.error(f"Error while closing Telnet connection: {e}")
+    except Exception as error:
+        logging.error("Error while closing Telnet connection: %s", lambda: error)
 
     try:
         if ftp_client:
             ftp_client.close()
-    except Exception as e:
-        logging.error(f"Error while closing FTP connection: {e}")
+    except Exception as error:
+        logging.error("Error while closing FTP connection: %s", lambda: error)
 
 
-def log_error(error_message, error_severity, error_log_list):
-    logging.error(error_message)
-    if error_severity == "critical":
-        logging.error("Critical error, exiting the application.")
-    elif error_severity == "non-critical":
-        logging.error("None critical error, continuing...")
-    logging.info("Displaying the log list:")
-    for log in error_log_list:
-        logging.info(log)
-    error_log_list.clear()
-
-async def handle_noise_level_auto_adjust(telnet_client, ftp_client,debugConsoleController, n1_mv_value):
+async def handle_noise_level_auto_adjust(
+    telnet_client, ftp_client, debug_console_controller, n1_mv_value
+):
+    """
+    Handle the noise level auto adjust option., needed because of there is a case where it is not async
+    """
     if n1_mv_value != -1:
-        return await noise_level_auto_adjust(telnet_client, ftp_client,debugConsoleController, n1_mv_value)
+        return await noise_level_auto_adjust(
+            telnet_client, ftp_client, debug_console_controller, n1_mv_value
+        )
     else:
         print("Please run option 9 first")
 
+
 async def main():
+    """
+    The main application function.
+    """
     cleanup_flag = False
     logging.info("All modules imported successfully.")
     logging.info("Starting the application.")
@@ -77,8 +86,8 @@ async def main():
         if not await telnet_client.is_connected():
             await telnet_client.connect()
         logging.info("Connected to Telnet.")
-    except Exception as e:
-        logging.error(f"Failed to connect to Telnet: {e}")
+    except Exception as error:
+        logging.error(f"Failed to connect to Telnet: {error}")
         await cleanup(telnet_client)
         return
 
@@ -90,19 +99,19 @@ async def main():
         if not ftp_client.is_connected():
             ftp_client.connect()
         logging.info("Connected to FTP.")
-    except Exception as e:
-        logging.error(f"Failed to connect to FTP: {e}")
+    except Exception as error:
+        logging.error(f"Failed to connect to FTP: {error}")
         await cleanup(telnet_client)
         return
 
     # initialize and connect to debug console
     try:
-        debugConsoleController = DebugConsoleController()
-        if not debugConsoleController.activate():
+        debug_console_controller = DebugConsoleController()
+        if not debug_console_controller.activate():
             return
         logging.info("Connected to Debug Console.")
-    except Exception as e:
-        logging.error(f"Failed to connect to Debug Console: {e}")
+    except Exception as error:
+        logging.error(f"Failed to connect to Debug Console: {error}")
         await cleanup(telnet_client, ftp_client)
         return
 
@@ -110,37 +119,53 @@ async def main():
     try:
         await lv5600_initialization(telnet_client)
         logging.info("LV5600 initialized.")
-    except LV5600InitializationError as e:
-        logging.error("LV5600 Initialization error: " + str(e))
+    except LV5600InitializationError as error:
+        logging.error("LV5600 Initialization error: " + str(error))
         await cleanup(telnet_client, ftp_client)
         return
-    except Exception as e:
-        logging.error(f"An unexpected error occurred: {e}")
+    except Exception as error:
+        logging.error(f"An unexpected error occurred: {error}")
         await cleanup(telnet_client, ftp_client)
         return
 
     menu_options = {
-        "1": lambda: capture_and_send_bmp(telnet_client, ftp_client), # does not have return value
-        "2": lambda: recall_preset(telnet_client, input("Enter preset number: ")), # does not have return value
-        "3": lambda: send_command(telnet_client), # does not have return value
-        "4": lambda: capture_multiple(telnet_client, ftp_client), # does not have return value
-        "5": lambda: display_result(telnet_client, ftp_client), # does not have return value
+        "1": lambda: capture_and_send_bmp(
+            telnet_client, ftp_client
+        ),  # does not have return value
+        "2": lambda: recall_preset(
+            telnet_client, input("Enter preset number: ")
+        ),  # does not have return value
+        "3": lambda: send_command(telnet_client),  # does not have return value
+        "4": lambda: capture_multiple(
+            telnet_client, ftp_client
+        ),  # does not have return value
+        "5": lambda: display_result(
+            telnet_client, ftp_client
+        ),  # does not have return value
         "6": lambda: auto_adjust(
             telnet_client,
             ftp_client,
-            debugConsoleController,
+            debug_console_controller,
             int(input("Enter current light level: ")),
-            mode = "SAT",
-            target = 769.5,
-            target_high_threshold= 769.5,
-            target_low_threshold= 766.5,
+            mode="SAT",
+            target=769.5,
+            target_high_threshold=769.5,
+            target_low_threshold=766.5,
             use_poly_prediction=True,
             jump_threshold=700,
-        ), # does not have return value
-        "7": lambda: handle_noise_level_auto_adjust(telnet_client, ftp_client,debugConsoleController,n1_mv_value), # does not have return value
-        "8": lambda: tune_to_target_level(debugConsoleController), # does not have return value
-        "9": lambda: white_balance_auto_detect(telnet_client, ftp_client), # return the value of n1_mv
-        "10": lambda: lv5600_initialization(telnet_client), # does not have return value
+        ),  # does not have return value
+        "7": lambda: handle_noise_level_auto_adjust(
+            telnet_client, ftp_client, debug_console_controller, n1_mv_value
+        ),  # does not have return value
+        "8": lambda: tune_to_target_level(
+            debug_console_controller
+        ),  # does not have return value
+        "9": lambda: white_balance_auto_detect(
+            telnet_client, ftp_client
+        ),  # return the value of n1_mv
+        "10": lambda: lv5600_initialization(
+            telnet_client
+        ),  # does not have return value
     }
     
     n1_mv_value = -1
@@ -167,21 +192,21 @@ async def main():
             await cleanup(telnet_client, ftp_client)
             cleanup_flag = True
             break
-            
+
         try:
             if choice == "9":
                 n1_mv_value = await menu_options[choice]()
             else:
                 await menu_options[choice]()
-        except LV5600InitializationError as e:
-            log_error("LV5600 Initialization error: " + str(e), "critical", [])
+        except LV5600InitializationError as error:
+            logging.error("LV5600 Initialization error: %s", str(error))
             await cleanup(telnet_client, ftp_client)
             return
-        except Exception as e:
-            log_error(f"An unexpected error occurred: {e}", "critical", [])
+        except Exception as error:
+            logging.error("An unexpected error occurred: %s", error)
             await cleanup(telnet_client, ftp_client)
             return
-        input(f"\nPress Enter to continue...")
+        input("\nPress Enter to continue...")
 
     if not cleanup_flag:
         await cleanup(telnet_client, ftp_client)

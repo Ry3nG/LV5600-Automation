@@ -1,19 +1,31 @@
-from utils.peak_pixel_detection_util import get_cursor_and_mv
+"""
+This module contains a function to display the saturation result of an image.
 
-import numpy as np
-import matplotlib.pyplot as plt
-import cv2
-import os
+Functions:
+----------
+display_result: Displays the saturation result of an image.
+"""
 import logging
-import collections
-from time import sleep
+import cv2
+import matplotlib.pyplot as plt
 from Constants import Constants
 from utils.peak_pixel_detection_util import get_cursor_and_mv, classify_mv_level
 
-average_count = 3
+
+AVERAGE_COUNT = Constants.AVERAGE_COUNT
 
 
 async def display_result(telnet_client, ftp_client):
+    """
+    Displays the saturation result of an image.
+
+    Parameters:
+    -----------
+    telnet_client: TelnetClient
+        The telnet client object.
+    ftp_client: FTPClient
+        The FTP client object.
+    """
     # show the image, and the classification
     image = cv2.imread(Constants.LOCAL_FILE_PATH_BMP)
     if image is None:

@@ -1,27 +1,27 @@
+"""
+    auto_tuning_use_peak_pixel.py
+"""
 import logging
+import collections
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
-from .lv5600_initialization import lv5600_initialization, LV5600InitializationError
-from .capture_and_send_bmp import capture_and_send_bmp
 from utils.peak_pixel_detection_util import (
     classify_mv_level,
     prompt_manual_adjustment,
-    calculate_middle_cyan_y,
     get_cursor_and_mv,
 )
 from commands import wfm_command
 from Constants import Constants
-import collections
-from Constants import Constants
 
-average_count = 5
+
+AVERAGE_COUNT = Constants.AVERAGE_COUNT
 
 
 async def auto_adjust(
     telnet_client,
     ftp_client,
-    debugConsoleController,
+    debug_console_controller,
     current_brightness,
     mode,
     target,
@@ -86,11 +86,11 @@ async def auto_adjust(
 
             if current_class_ == "Too high":
                 print("Turning down the brightness")
-                debugConsoleController.tune_down_light()
+                debug_console_controller.tune_down_light()
                 current_light_level -= 1
             elif current_class_ == "Too low":
                 print("Turning up the brightness")
-                debugConsoleController.tune_up_light()
+                debug_console_controller.tune_up_light()
                 current_light_level += 1
             elif current_class_ == "Just right":
                 break
@@ -116,7 +116,7 @@ async def auto_adjust(
                 "Adjusting brightness closer to target level "
                 + str(predicted_light_level)
             )
-            debugConsoleController.tune_to_target_level(
+            debug_console_controller.tune_to_target_level(
                 int(predicted_light_level), current_light_level
             )
 
@@ -148,7 +148,7 @@ async def white_balance_auto_detect(telnet_client, ftp_client):
 
 
 async def noise_level_auto_adjust(
-    telnet_client, ftp_client, debugConsoleController, n1_value
+    telnet_client, ftp_client, debug_console_controller, n1_value
 ):
     n1_plus20 = n1_value + 20
     n1_minus20 = n1_value - 20
@@ -177,7 +177,7 @@ async def noise_level_auto_adjust(
     await auto_adjust(
         telnet_client,
         ftp_client,
-        debugConsoleController,
+        debug_console_controller,
         int(input("Enter current brightness level: ")),
         "NOISE",
         n1_plus20,
@@ -195,7 +195,7 @@ async def noise_level_auto_adjust(
     await auto_adjust(
         telnet_client,
         ftp_client,
-        debugConsoleController,
+        debug_console_controller,
         int(input("Enter current brightness level: ")),
         "NOISE",
         n1_minus20,

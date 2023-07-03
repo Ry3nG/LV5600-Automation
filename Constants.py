@@ -1,7 +1,12 @@
-# the place for all the constants
+import os
 
 
 class Constants:
+    """
+    A class that contains all the constants used in the LV5600 Automation project.
+    """
+
+    BASE_DIR = "E:\\"
     # Credentials for FTP
     IP_ADDRESS_FTP = "192.168.0.1"
     USERNAME_FTP = "LV5600"
@@ -26,11 +31,12 @@ class Constants:
 
     # for Capture and storage
     FTP_FILE_NAME_BMP = "cap_bmp.bmp"
-    LOCAL_FILE_PATH_BMP = "C:\\M15\\Leader LV5600 PoC\\LV5600 Automation\\output\\CAP_BMP.bmp"
-    LOCAL_BUFFER_PATH = "C:\\M15\\Leader LV5600 PoC\\LV5600 Automation\\output\\buffer\\"
+    LOCAL_FILE_PATH_BMP = os.path.join(
+        BASE_DIR, "M15", "Leader LV5600 PoC","LV5600 Automation", "output", "CAP_BMP.bmp"
+    )
+    LOCAL_BUFFER_PATH = os.path.join(BASE_DIR, "M15", "Leader LV5600 PoC","LV5600 Automation", "output", "buffer")
 
-
-    # for peak pixel detection 
+    # for peak pixel detection
     AVERAGE_COUNT = 5
     JUMP_THRESHOLD = 700
     MAX_CURSOR_POSITION = 11000
@@ -38,7 +44,7 @@ class Constants:
     TARGET_THRESHOLD_OFFSET = 3
 
     # model
-    MODEL_PATH = "C:\\M15\\Leader LV5600 PoC\\Models\\"
+    MODEL_PATH = os.path.join(BASE_DIR, "M15", "Leader LV5600 PoC", "Models")
     WLI_MODEL_NAME = "model_20_20230615-134651.h5"
     RDI_MODEl_NAME = "RDI-Model-20K.h5"
 
@@ -50,15 +56,58 @@ class Constants:
 
     # dataset directory
     # WLI
-    PATH_WLI_DATASET_RAW = "C:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\RAW\\"
-    PATH_WLI_TESTSET = "C:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\TestSet\\"
-    PATH_WLI_FAILED = "C:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\Failed Testset\\"
-    PATH_WLI_BUFFER = "C:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\PreprocessingBuffer\\"
+    PATH_WLI_DATASET_RAW = os.path.join(
+        BASE_DIR, "M15", "Leader LV5600 PoC", "Dataset", "WLI Dataset", "RAW"
+    )
+    PATH_WLI_TESTSET = os.path.join(
+        BASE_DIR, "M15", "Leader LV5600 PoC", "Dataset", "WLI Dataset", "TestSet"
+    )
+    PATH_WLI_FAILED = os.path.join(
+        BASE_DIR, "M15", "Leader LV5600 PoC", "Dataset", "WLI Dataset", "Failed Testset"
+    )
+    PATH_WLI_BUFFER = os.path.join(
+        BASE_DIR,
+        "M15",
+        "Leader LV5600 PoC",
+        "Dataset",
+        "WLI Dataset",
+        "PreprocessingBuffer",
+    )
     # Noise
-    PATH_NOISE_DATASET_RAW = "C:\\M15\\Leader LV5600 PoC\\Dataset\\Noise Dataset\\RAW\\"
+    PATH_NOISE_DATASET_RAW = os.path.join(
+        BASE_DIR, "M15", "Leader LV5600 PoC", "Dataset", "Noise Dataset", "RAW"
+    )
     # RDI
-    PATH_RDI_DATASET_RAW = "C:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\RAW\\"
-    PATH_RDI_DATASET_PREPROCESSED = "C:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\Preprocessed\\"
-    PATH_RDI_TESTSET = "C:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\test"   
-    PATH_RDI_FAILED = "C:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\failed"
-    PATH_RDI_BUFFER = "C:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\buffer"
+    PATH_RDI_DATASET_RAW = os.path.join(
+        BASE_DIR, "M15", "Leader LV5600 PoC", "Dataset", "RDI Dataset", "RAW"
+    )
+    PATH_RDI_DATASET_PREPROCESSED = os.path.join(
+        BASE_DIR, "M15", "Leader LV5600 PoC", "Dataset", "RDI Dataset", "Preprocessed"
+    )
+    PATH_RDI_TESTSET = os.path.join(
+        BASE_DIR,
+        "M15",
+        "Leader LV5600 PoC",
+        "Dataset",
+        "RDI Dataset",
+        "PreProcessed",
+        "test",
+    )
+    PATH_RDI_FAILED = os.path.join(
+        BASE_DIR,
+        "M15",
+        "Leader LV5600 PoC",
+        "Dataset",
+        "RDI Dataset",
+        "PreProcessed",
+        "failed",
+    )
+    PATH_RDI_BUFFER = os.path.join(
+        BASE_DIR,
+        "M15",
+        "Leader LV5600 PoC",
+        "Dataset",
+        "RDI Dataset",
+        "PreProcessed",
+        "buffer",
+    )
