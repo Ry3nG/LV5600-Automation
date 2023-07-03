@@ -26,11 +26,19 @@ class Constants:
 
     # for Capture and storage
     FTP_FILE_NAME_BMP = "cap_bmp.bmp"
-    LOCAL_FILE_PATH_BMP = "E:\\M15\\Leader LV5600 PoC\\LV5600 Automation\\output\\CAP_BMP.bmp"
-    LOCAL_BUFFER_PATH = "E:\\M15\\Leader LV5600 PoC\\LV5600 Automation\\output\\buffer\\"
+    LOCAL_FILE_PATH_BMP = "C:\\M15\\Leader LV5600 PoC\\LV5600 Automation\\output\\CAP_BMP.bmp"
+    LOCAL_BUFFER_PATH = "C:\\M15\\Leader LV5600 PoC\\LV5600 Automation\\output\\buffer\\"
+
+
+    # for peak pixel detection 
+    AVERAGE_COUNT = 5
+    JUMP_THRESHOLD = 700
+    MAX_CURSOR_POSITION = 11000
+    MAX_MV_VALUE = 770
+    TARGET_THRESHOLD_OFFSET = 3
 
     # model
-    MODEL_PATH = "E:\\M15\\Leader LV5600 PoC\\Models\\"
+    MODEL_PATH = "C:\\M15\\Leader LV5600 PoC\\Models\\"
     WLI_MODEL_NAME = "model_20_20230615-134651.h5"
     RDI_MODEl_NAME = "RDI-Model-20K.h5"
 
@@ -42,15 +50,15 @@ class Constants:
 
     # dataset directory
     # WLI
-    PATH_WLI_DATASET_RAW = "E:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\RAW\\"
-    PATH_WLI_TESTSET = "E:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\TestSet\\"
-    PATH_WLI_FAILED = "E:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\Failed Testset\\"
-    PATH_WLI_BUFFER = "E:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\PreprocessingBuffer\\"
+    PATH_WLI_DATASET_RAW = "C:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\RAW\\"
+    PATH_WLI_TESTSET = "C:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\TestSet\\"
+    PATH_WLI_FAILED = "C:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\Failed Testset\\"
+    PATH_WLI_BUFFER = "C:\\M15\\Leader LV5600 PoC\\Dataset\\WLI Dataset\\PreprocessingBuffer\\"
     # Noise
-    PATH_NOISE_DATASET_RAW = "E:\\M15\\Leader LV5600 PoC\\Dataset\\Noise Dataset\\RAW\\"
+    PATH_NOISE_DATASET_RAW = "C:\\M15\\Leader LV5600 PoC\\Dataset\\Noise Dataset\\RAW\\"
     # RDI
-    PATH_RDI_DATASET_RAW = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\RAW\\"
-    PATH_RDI_DATASET_PREPROCESSED = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\Preprocessed\\"
-    PATH_RDI_TESTSET = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\test"   
-    PATH_RDI_FAILED = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\failed"
-    PATH_RDI_BUFFER = "E:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\buffer"
+    PATH_RDI_DATASET_RAW = "C:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\RAW\\"
+    PATH_RDI_DATASET_PREPROCESSED = "C:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\Preprocessed\\"
+    PATH_RDI_TESTSET = "C:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\test"   
+    PATH_RDI_FAILED = "C:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\failed"
+    PATH_RDI_BUFFER = "C:\\M15\\Leader LV5600 PoC\\Dataset\\RDI Dataset\\PreProcessed\\buffer"

@@ -13,7 +13,7 @@ from utils.peak_pixel_detection_util import (
 from commands import wfm_command
 from Constants import Constants
 import collections
-import cv2
+from Constants import Constants
 
 average_count = 5
 
@@ -28,27 +28,29 @@ async def auto_adjust(
     target_high_threshold,
     target_low_threshold,
     use_poly_prediction=True,
-    jump_threshold=700,
+    jump_threshold=Constants.AVERAGE_COUNT,
 ):
-    adjust_level = None
+    current_class_ = None
     # convert target mv to target cursor height
-    target_cursor_height = (11000 / 770) * target
+    target_cursor_height = (
+        Constants.MAX_CURSOR_POSITION / Constants.MAX_MV_VALUE
+    ) * target
     mv_values = []
     light_levels = []
     current_light_level = current_brightness  # Init with current brightness
     light_history = collections.deque(maxlen=3)
 
-    while adjust_level != "Just right":
+    while current_class_ != "Just right":
         current_mv_value = await get_cursor_and_mv(
             telnet_client, ftp_client, mode, target_cursor_height
         )
-        adjust_level = classify_mv_level(
+        current_class_ = classify_mv_level(
             current_mv_value, target_high_threshold, target_low_threshold
         )
 
         # check if the response is none
-        if adjust_level is None or current_mv_value is None:
-            logging.error("Adjust level or current mv value is None")
+        if current_class_ is None or current_mv_value is None:
+            logging.error("Response is None")
             return
 
         # add the current light level to the history
@@ -82,26 +84,16 @@ async def auto_adjust(
             mv_values.append(current_mv_value)
             light_levels.append(current_light_level)
 
-            if adjust_level == "Too bright":
+            if current_class_ == "Too high":
                 print("Turning down the brightness")
                 debugConsoleController.tune_down_light()
                 current_light_level -= 1
-            elif adjust_level == "Too dark":
+            elif current_class_ == "Too low":
                 print("Turning up the brightness")
                 debugConsoleController.tune_up_light()
                 current_light_level += 1
-            elif adjust_level == "Just right":
-                print(adjust_level)
-                try:
-                    logging.info(f"Tuning WFM Cursor to {target:.1f} mV")
-                    response = await telnet_client.send_command(
-                        wfm_command.wfm_cursor_height(
-                            "Y", "DELTA", int(target_cursor_height)
-                        )
-                    )
-                    logging.info(f"Tuned WFM Cursor to {target:.1f} mV")
-                except Exception as e:
-                    logging.error(f"An unexpected error occurred: {e}")
+            elif current_class_ == "Just right":
+                break
             else:
                 print("Unknown status")
         else:
@@ -138,6 +130,16 @@ async def auto_adjust(
             if current_mv_value >= jump_threshold:
                 break  # exit the while loop if the target_mv_level is reached
 
+    print(current_class_)
+    try:
+        logging.info(f"Tuning WFM Cursor to {target:.1f} mV")
+        response = await telnet_client.send_command(
+            wfm_command.wfm_cursor_height("Y", "DELTA", int(target_cursor_height))
+        )
+        logging.info(f"Tuned WFM Cursor to {target:.1f} mV")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
+
 
 async def white_balance_auto_detect(telnet_client, ftp_client):
     n1_mv_values = await get_cursor_and_mv(telnet_client, ftp_client, "WB")
@@ -156,15 +158,19 @@ async def noise_level_auto_adjust(
     # so the slope is 770/11000 = 0.07
     # so cursor = (770/11000) * mv
 
-    cursor_plus20 = int((770 / 11000) * n1_plus20)
-    cursor_minus20 = int((770 / 11000) * n1_minus20)
+    cursor_plus20 = int(
+        (Constants.MAX_CURSOR_POSITION / Constants.MAX_MV_VALUE) * n1_plus20
+    )
+    cursor_minus20 = int(
+        (Constants.MAX_CURSOR_POSITION / Constants.MAX_MV_VALUE) * n1_minus20
+    )
 
     # calculate threshold
-    n1_plus20_high_threshold = n1_plus20 + 3
-    n1_plus20_low_threshold = n1_plus20 - 3
+    n1_plus20_high_threshold = n1_plus20 + Constants.TARGET_THRESHOLD_OFFSET
+    n1_plus20_low_threshold = n1_plus20 - Constants.TARGET_THRESHOLD_OFFSET
 
-    n1_minus20_high_threshold = n1_minus20 + 3
-    n1_minus20_low_threshold = n1_minus20 - 3
+    n1_minus20_high_threshold = n1_minus20 + Constants.TARGET_THRESHOLD_OFFSET
+    n1_minus20_low_threshold = n1_minus20 - Constants.TARGET_THRESHOLD_OFFSET
 
     logging.info("N1 + 20: " + str(n1_plus20))
     logging.info("Auto adjusting to N1 + 20")

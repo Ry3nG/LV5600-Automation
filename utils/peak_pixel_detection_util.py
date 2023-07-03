@@ -18,7 +18,7 @@ from Constants import Constants
 average_count = 3
 
 
-def calculate_middle_cyan_y(image, calculation_type="min") -> float:
+def calculate_middle_cyan_y(image, calculation_type) -> float:
     """
     Calculates the y-coordinate of the middle cyan pixel in the given image.
 
@@ -54,16 +54,14 @@ def calculate_middle_cyan_y(image, calculation_type="min") -> float:
 
 def classify_mv_level(mv_value: float, target_high, target_low) -> str:
     if mv_value > target_high:
-        mv_level = "Too bright"
+        return "Too high"
     elif target_low <= mv_value <= target_high:
-        mv_level = "Just right"
-    elif 0 <= mv_value <= target_low:
-        mv_level = "Too dark"
-    else:
-        logging.error(f"Invalid mv value: {mv_value}")
-        mv_level = "Invalid"
-    return mv_level
+        return "Just right"
+    elif 0 <= mv_value < target_low:
+        return "Too low"
 
+    logging.error(f"Invalid mv value: {mv_value}")
+    return "Invalid"
 
 async def prompt_manual_adjustment():
     while True:
@@ -75,7 +73,7 @@ async def prompt_manual_adjustment():
 
 
 async def get_cursor_and_mv(
-    telnet_client, ftp_client, mode, target_cursor_value=11000
+    telnet_client, ftp_client, mode, target_cursor_value=Constants.MAX_CURSOR_POSITION
 ):  # mode can be "SAT" or "WB" or "NOISE"
     error_tuple = (None, None)
     try:
@@ -111,11 +109,14 @@ async def get_cursor_and_mv(
                 Constants.WFM_ROI_COORDINATES_Y1 : Constants.WFM_ROI_COORDINATES_Y2,
             ]
             if mode == "SAT":
-                mid_cyan_y = calculate_middle_cyan_y(image)
+                mid_cyan_y = calculate_middle_cyan_y(image, calculation_type="min")
             elif mode == "WB":
                 mid_cyan_y = calculate_middle_cyan_y(image, calculation_type="mean")
             elif mode == "NOISE":
                 mid_cyan_y = calculate_middle_cyan_y(image, calculation_type="mean")
+            else:
+                logging.error(f"Invalid mode: {mode}")
+                return error_tuple
             if np.isnan(mid_cyan_y):
                 logging.warning(f"No cyan pixel in the middle for image {i+1}")
                 continue
