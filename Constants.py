@@ -32,9 +32,9 @@ class Constants:
     # for Capture and storage
     FTP_FILE_NAME_BMP = "cap_bmp.bmp"
     LOCAL_FILE_PATH_BMP = os.path.join(
-        BASE_DIR, "M15", "Leader LV5600 PoC","LV5600 Automation", "output", "CAP_BMP.bmp"
+        BASE_DIR, "M15", "Leader LV5600 PoC","LV5600-Automation", "output", "CAP_BMP.bmp"
     )
-    LOCAL_BUFFER_PATH = os.path.join(BASE_DIR, "M15", "Leader LV5600 PoC","LV5600 Automation", "output", "buffer")
+    LOCAL_BUFFER_PATH = os.path.join(BASE_DIR, "M15", "Leader LV5600 PoC","LV5600-Automation", "output", "buffer")
 
     # for peak pixel detection
     AVERAGE_COUNT = 5
