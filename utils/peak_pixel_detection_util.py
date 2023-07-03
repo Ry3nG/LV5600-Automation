@@ -53,6 +53,20 @@ def calculate_middle_cyan_y(image, calculation_type) -> float:
 
 
 def classify_mv_level(mv_value: float, target_high, target_low) -> str:
+    """
+    Classifies the given mv_value as 'Too high', 'Just right', 'Too low', or 'Invalid' based on the given target_high and target_low values.
+
+    Args:
+        mv_value (float): The mv value to classify.
+        target_high (float): The upper threshold for the mv value.
+        target_low (float): The lower threshold for the mv value.
+
+    Returns:
+        str: The classification of the mv value.
+
+    Raises:
+        None.
+    """
     if mv_value > target_high:
         return "Too high"
     elif target_low <= mv_value <= target_high:
@@ -64,6 +78,18 @@ def classify_mv_level(mv_value: float, target_high, target_low) -> str:
     return "Invalid"
 
 async def prompt_manual_adjustment():
+    """
+    Prompts the user to manually adjust and waits for confirmation to continue.
+
+    Args:
+        None.
+
+    Returns:
+        None.
+
+    Raises:
+        None.
+    """
     while True:
         user_input = input("Please manually adjust, press 'y' to continue")
         if user_input == "y":
@@ -74,8 +100,25 @@ async def prompt_manual_adjustment():
 
 async def get_cursor_and_mv(
     telnet_client, ftp_client, mode, target_cursor_value=Constants.MAX_CURSOR_POSITION
-):  # mode can be "SAT" or "WB" or "NOISE"
-    error_tuple = (None, None)
+) -> float:
+    """
+    Captures an image from the LV5600 and calculates the middle cyan pixel's y value.
+    Calculates the average y value of multiple images and returns the current MV value.
+
+    Args:
+        telnet_client (TelnetClient): The telnet client to use for sending commands.
+        ftp_client (FTPClient): The ftp client to use for sending commands.
+        mode (str): The mode to use for calculating the middle cyan pixel's y value. Can be "SAT", "WB", or "NOISE".
+        target_cursor_value (int): The target cursor value to use for tuning the WFM Cursor. Defaults to Constants.MAX_CURSOR_POSITION.
+
+    Returns:
+        float: The current MV value.
+        or -1.0 if there was an error.
+
+    Raises:
+        None.
+    """
+    error_code = -1.0
     try:
         # turn off the WFM SCALE and Cursor
         try:
@@ -87,7 +130,7 @@ async def get_cursor_and_mv(
             sleep(0.2)
         except Exception as e:
             logging.error(f"An unexpected error occurred: {e}")
-            return error_tuple
+            return error_code
 
         cyan_y_values = []
         for i in range(average_count):
@@ -101,7 +144,7 @@ async def get_cursor_and_mv(
             image = cv2.imread(Constants.LOCAL_FILE_PATH_BMP)
             if image is None:
                 logging.error("Image is None")
-                return error_tuple
+                return error_code
 
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             image = image[
@@ -116,7 +159,7 @@ async def get_cursor_and_mv(
                 mid_cyan_y = calculate_middle_cyan_y(image, calculation_type="mean")
             else:
                 logging.error(f"Invalid mode: {mode}")
-                return error_tuple
+                return error_code
             if np.isnan(mid_cyan_y):
                 logging.warning(f"No cyan pixel in the middle for image {i+1}")
                 continue
@@ -148,7 +191,7 @@ async def get_cursor_and_mv(
                 logging.info("Tuned WFM Cursor to peak level")
             except Exception as e:
                 logging.error(f"An unexpected error occurred: {e}")
-                return error_tuple
+                return error_code
 
     finally:
         if mode == "WB":
@@ -166,6 +209,6 @@ async def get_cursor_and_mv(
         logging.info("Turned on WFM SCALE and Cursor")
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
-        return error_tuple
+        return error_code
 
     return current_mv_value

@@ -1,8 +1,27 @@
+"""
+This module provides a class DebugConsoleController that can be used to control the debug console . The class provides methods to move the cursor to specific coordinates, press keys, and adjust the light setting of the console. The module requires the pygetwindow and pyautogui libraries to be installed.
+"""
 import pygetwindow as gw
 import pyautogui
 import time
 
 class DebugConsoleController:
+    """
+    A class that controls the debug console of a specific application.
+
+    Attributes:
+    WINDOW_TITLE (str): The title of the debug console window.
+    SETTING_MENU_X (int): The x-coordinate of the setting menu button.
+    SETTING_MENU_Y (int): The y-coordinate of the setting menu button.
+    ND_SETTING_X (int): The x-coordinate of the ND setting button.
+    ND_SETTING_Y (int): The y-coordinate of the ND setting button.
+    LIGHT_SETTING_X (int): The x-coordinate of the light setting button.
+    LIGHT_SETTING_Y (int): The y-coordinate of the light setting button.
+    DELIVERY_SETTING_X (int): The x-coordinate of the delivery setting button.
+    DELIVERY_SETTING_Y (int): The y-coordinate of the delivery setting button.
+    window (pygetwindow.Window): The window object of the debug console.
+    """
+
     # Constants:
     WINDOW_TITLE = "デバッグコンソール"
     SETTING_MENU_X = 240
@@ -15,9 +34,22 @@ class DebugConsoleController:
     DELIVERY_SETTING_Y = 194
 
     def __init__(self):
+        """
+        Initializes a new instance of the DebugConsoleController class.
+        """
         self.window = None
 
     def move_and_click(self, x, y):
+        """
+        Moves the cursor to the specified coordinates and performs a left mouse click.
+
+        Args:
+        x (int): The x-coordinate of the target location.
+        y (int): The y-coordinate of the target location.
+
+        Returns:
+        bool: True if the operation was successful, False otherwise.
+        """
         # Convert window-relative coordinates to screen-relative
         if(self.window is None):
             print("Window not found!")
@@ -34,25 +66,58 @@ class DebugConsoleController:
         pyautogui.click()
         time.sleep(0.5)
 
+        return True
+
     def press_key(self, key):
+        """
+        Presses the specified key.
+
+        Args:
+        key (str): The key to be pressed.
+
+        Returns:
+        None
+        """
         # Press the key
         pyautogui.press(key)
         time.sleep(0.5)
 
     # Util Functions
     def tune_up_light(self):
+        """
+        Increases the light setting by one step.
+
+        Returns:
+        None
+        """
         self.move_and_click(self.LIGHT_SETTING_X, self.LIGHT_SETTING_Y)
         self.press_key('down')
         self.press_key('enter')
         self.move_and_click(self.DELIVERY_SETTING_X, self.DELIVERY_SETTING_Y)
 
     def tune_down_light(self):
+        """
+        Decreases the light setting by one step.
+
+        Returns:
+        None
+        """
         self.move_and_click(self.LIGHT_SETTING_X, self.LIGHT_SETTING_Y)
         self.press_key('up')
         self.press_key('enter')
         self.move_and_click(self.DELIVERY_SETTING_X, self.DELIVERY_SETTING_Y)
     
     def tune_to_target_level(self,target_level, current_level):
+        """
+        Adjusts the light setting to the specified target level.
+
+        Args:
+        target_level (int): The target light level (0-255).
+        current_level (int): The current light level.
+
+        Returns:
+        None
+        """
         # target level can only be 0 to 255
         if(target_level > 255):
             target_level = 255
@@ -79,6 +144,12 @@ class DebugConsoleController:
         
 
     def activate(self):
+        """
+        Activates the debug console window.
+
+        Returns:
+        bool: True if the operation was successful, False otherwise.
+        """
         # Get a handle to the target application's window
         self.window = gw.getWindowsWithTitle(self.WINDOW_TITLE)[0]
 
@@ -92,19 +163,3 @@ class DebugConsoleController:
 
         return True
 
-def main():
-    controller = DebugConsoleController()
-
-    if not controller.activate():
-        return
-
-    # Operations
-    controller.move_and_click(controller.SETTING_MENU_X, controller.SETTING_MENU_Y)
-    controller.move_and_click(controller.ND_SETTING_X, controller.ND_SETTING_Y)
-    controller.move_and_click(controller.LIGHT_SETTING_X, controller.LIGHT_SETTING_Y)
-    controller.press_key('down')
-    controller.press_key('enter')
-    controller.move_and_click(controller.DELIVERY_SETTING_X, controller.DELIVERY_SETTING_Y)
-
-if __name__ == "__main__":
-    main()
