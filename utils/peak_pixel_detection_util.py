@@ -14,8 +14,9 @@ from sklearn.preprocessing import PolynomialFeatures
 
 import logging
 from Constants import Constants
+from PyQt5.QtWidgets import QMessageBox
 
-average_count = 3
+average_count = Constants.AVERAGE_COUNT
 
 
 def calculate_middle_cyan_y(image, calculation_type) -> float:
@@ -97,6 +98,19 @@ async def prompt_manual_adjustment():
         else:
             logging.info("Invalid input, please try again")
 
+async def prompt_manual_adjustment_qt():
+    while True:
+        message_box = QMessageBox()
+        message_box.setText("Please manually adjust")
+        message_box.setInformativeText("Press 'OK' to continue")
+        message_box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        result = message_box.exec_()
+
+        if result == QMessageBox.Ok:
+            break
+        else:
+            logging.info("Invalid input, please try again")
+
 
 async def get_cursor_and_mv(
     telnet_client, ftp_client, mode, target_cursor_value=Constants.MAX_CURSOR_POSITION
@@ -137,7 +151,6 @@ async def get_cursor_and_mv(
             # capture the image
             try:
                 await capture_and_send_bmp(telnet_client, ftp_client)
-                logging.info(f"Captured and sent bmp {i+1}.")
             except Exception as e:
                 logging.error(f"Failed to capture and send bmp: {e}")
                 continue

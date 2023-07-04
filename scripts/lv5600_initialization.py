@@ -93,6 +93,7 @@ async def lv5600_initialization(telnet_client):
         logging.info("Set cursor unit to MV")
     except Exception as e:
         raise LV5600InitializationError("Failed to set cursor unit to MV")
+    
 
 class LV5600InitializationError(Exception):
     pass

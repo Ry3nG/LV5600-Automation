@@ -9,6 +9,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from utils.peak_pixel_detection_util import (
     classify_mv_level,
     prompt_manual_adjustment,
+    prompt_manual_adjustment_qt,
     get_cursor_and_mv,
 )
 from commands import wfm_command
@@ -29,6 +30,7 @@ async def auto_adjust(
     target_low_threshold,
     use_poly_prediction=True,
     jump_threshold=Constants.AVERAGE_COUNT,
+    use_qt=False,
 ):
     current_class_ = None
     # convert target mv to target cursor height
@@ -58,7 +60,7 @@ async def auto_adjust(
 
         # check if the last 3 light level values are oscillating
         if len(light_history) == 3 and len(set(light_history)) == 2:
-            print("Possible oscillation detected, breaking the loop")
+            logging.warning("Possible oscillation detected, breaking the loop")
             # tune WFM Cursor to target for indication
             try:
                 logging.info(f"Tuning WFM Cursor to {target:.1f} mV")
@@ -70,7 +72,10 @@ async def auto_adjust(
                 logging.info(f"Tuned WFM Cursor to {target:.1f} mV")
             except Exception as e:
                 logging.error(f"An unexpected error occurred: {e}")
-            await prompt_manual_adjustment()
+            if use_qt:
+                await prompt_manual_adjustment_qt()
+            else:
+                await prompt_manual_adjustment()
             # pop all from the deque
             light_history.clear()
             continue
@@ -85,17 +90,17 @@ async def auto_adjust(
             light_levels.append(current_light_level)
 
             if current_class_ == "Too high":
-                print("Turning down the brightness")
+                logging.info("Turning down the brightness")
                 debug_console_controller.tune_down_light()
                 current_light_level -= 1
             elif current_class_ == "Too low":
-                print("Turning up the brightness")
+                logging.info("Turning up the brightness")
                 debug_console_controller.tune_up_light()
                 current_light_level += 1
             elif current_class_ == "Just right":
                 break
             else:
-                print("Unknown status")
+                logging.info("Unknown status")
         else:
             # fit polynomial regression model and predict light level to reach target_mv_level
             poly = PolynomialFeatures(degree=2)
@@ -112,7 +117,7 @@ async def auto_adjust(
             if predicted_light_level > 255:
                 predicted_light_level = 255
 
-            print(
+            logging.info(
                 "Adjusting brightness closer to target level "
                 + str(predicted_light_level)
             )
@@ -204,3 +209,46 @@ async def noise_level_auto_adjust(
         use_poly_prediction=False,
         jump_threshold=0,
     )
+
+async def noise_level_adjust_plus_20(telnet_client, ftp_client, debug_console_controller, n1_value, current_light_level):
+    n1_plus20 = n1_value + 20
+    cursor_plus20 = int((Constants.MAX_CURSOR_POSITION / Constants.MAX_MV_VALUE) * n1_plus20)
+    n1_plus20_high_threshold = n1_plus20 + Constants.TARGET_THRESHOLD_OFFSET
+    n1_plus20_low_threshold = n1_plus20 - Constants.TARGET_THRESHOLD_OFFSET
+    logging.info("N1 + 20: " + str(n1_plus20))
+    logging.info("Auto adjusting to N1 + 20")
+    await auto_adjust(
+        telnet_client,
+        ftp_client,
+        debug_console_controller,
+        current_light_level,
+        "NOISE",
+        n1_plus20,
+        n1_plus20_high_threshold,
+        n1_plus20_low_threshold,
+        use_poly_prediction=False,
+        jump_threshold=0,
+        use_qt=True
+    )
+
+async def noise_level_adjust_minus_20(telnet_client, ftp_client, debug_console_controller, n1_value,current_light_level):
+    n1_minus20 = n1_value - 20
+    cursor_minus20 = int((Constants.MAX_CURSOR_POSITION / Constants.MAX_MV_VALUE) * n1_minus20)
+    n1_minus20_high_threshold = n1_minus20 + Constants.TARGET_THRESHOLD_OFFSET
+    n1_minus20_low_threshold = n1_minus20 - Constants.TARGET_THRESHOLD_OFFSET
+    logging.info("N1 - 20: " + str(n1_minus20))
+    logging.info("Auto adjusting to N1 - 20")
+    await auto_adjust(
+        telnet_client,
+        ftp_client,
+        debug_console_controller,
+        current_light_level,
+        "NOISE",
+        n1_minus20,
+        n1_minus20_high_threshold,
+        n1_minus20_low_threshold,
+        use_poly_prediction=False,
+        jump_threshold=0,
+        use_qt=True
+    )
+

@@ -10,6 +10,8 @@ import cv2
 import matplotlib.pyplot as plt
 from Constants import Constants
 from utils.peak_pixel_detection_util import get_cursor_and_mv, classify_mv_level
+from PyQt5.QtGui import QPixmap,QImage
+from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsScene
 
 
 AVERAGE_COUNT = Constants.AVERAGE_COUNT
@@ -50,3 +52,19 @@ async def display_result(telnet_client, ftp_client):
     print("Saturation class: ", saturation_class)
     plt.title(str(saturation_class) + " " + str(current_mv_value))
     plt.show()
+
+async def display_result_qt(telnet_client, ftp_client):
+    current_mv_value = await get_cursor_and_mv(telnet_client, ftp_client, "SAT")
+    saturation_class = classify_mv_level(current_mv_value, 769.5, 766.5)
+    if saturation_class == "Too high":
+        saturation_class = "Oversatuated"
+    elif saturation_class == "Too low":
+        saturation_class = "Undersaturated"
+    elif saturation_class == "Just right":
+        saturation_class = "Just Saturated"
+
+    # Load the image
+    pixmap = QPixmap(Constants.LOCAL_FILE_PATH_BMP)
+    
+    
+    return pixmap, saturation_class, current_mv_value
