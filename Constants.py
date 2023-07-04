@@ -41,7 +41,7 @@ class Constants:
     JUMP_THRESHOLD = 700
     MAX_CURSOR_POSITION = 11000
     MAX_MV_VALUE = 770
-    TARGET_THRESHOLD_OFFSET = 3
+    TARGET_THRESHOLD_OFFSET = 5
 
     # model
     MODEL_PATH = os.path.join(BASE_DIR, "M15", "Leader LV5600 PoC", "Models")
