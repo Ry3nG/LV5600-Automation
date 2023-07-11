@@ -1,5 +1,6 @@
 import logging
 import os
+import numpy as np
 from time import sleep
 from PyQt5.QtWidgets import (
     QMainWindow,
@@ -90,6 +91,7 @@ class MyGUI(QMainWindow):
             self.clicked_capture_n_classify_sat
         )
         self.pushButton_auto_wb.clicked.connect(self.clicked_auto_wb)
+        self.pushButton_auto_adjust_sat.clicked.connect(self.clicked_auto_adjust_sat)
 
     def login(self):
         if (
@@ -248,13 +250,7 @@ class MyGUI(QMainWindow):
             )
 
     @asyncSlot()
-    async def clicked_capture_n_classify_sat(self):
-        logging.info(
-            "-------------------- Capturing and classifying SAT --------------------"
-        )
-        local_file_path = os.path.join(
-            self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
-        )
+    async def classify_saturation(self, local_file_path):
         with FTPSession(self.ftp_client) as ftp_client:
             # turn off scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
@@ -268,13 +264,15 @@ class MyGUI(QMainWindow):
                 )
                 mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan("SAT")
                 mid_cyan_y_values.append(mid_cyan_y_value)
-            
+
             # get the mean mid_cyan_y_value
             mean_cyan_y_value = sum(mid_cyan_y_values) / len(mid_cyan_y_values)
             logging.debug(f"Mean Cyan Y Value: {mean_cyan_y_value}")
+
             # get cursor and mv
             cursor, mv = CalculationTasks.get_cursor_and_mv(mean_cyan_y_value)
             logging.debug(f"Cursor: {cursor}, MV: {mv}")
+
             # classify SAT using mv
             class_ = CalculationTasks.classify_mv_level(
                 mv, CalculationConstants.TARGET_SATURATION_MV_VALUE
@@ -289,16 +287,23 @@ class MyGUI(QMainWindow):
             # turn on scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
 
-            # capture a new image as result
-            await LV5600Tasks.capture_n_send_bmp(
-                self.telnet_client, ftp_client, local_file_path
-            )
-            # display in graphics view
-            pixmap = QPixmap(local_file_path)
-            self.display_image_and_title(pixmap, f"SAT: {class_}")
-        logging.info(
-            "-------------------- SAT captured and classified --------------------"
-        )
+            return class_, mv
+
+    @asyncSlot()
+    async def clicked_capture_n_classify_sat(self):
+        logging.info("Capturing and classifying SAT")
+        local_file_path = os.path.join(self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP)
+        class_, mv = await self.classify_saturation(local_file_path)
+
+        # capture a new image as result
+        with FTPSession(self.ftp_client) as ftp_client:
+            await LV5600Tasks.capture_n_send_bmp(self.telnet_client, ftp_client, local_file_path)
+        
+        # display in graphics view
+        pixmap = QPixmap(local_file_path)
+        self.display_image_and_title(pixmap, f"SAT: {class_}")
+        logging.info("SAT captured and classified")
+
 
     @asyncSlot()
     async def clicked_auto_wb(self):
@@ -319,16 +324,18 @@ class MyGUI(QMainWindow):
                     self.telnet_client, ftp_client, local_file_path
                 )
                 # preprocess the image
-                mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan("WB")
+                mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
+                    "WB"
+                )
                 mid_cyan_y_values.append(mid_cyan_y_value)
-            
+
             # get the mean mid_cyan_y_value
             mean_cyan_y_value = sum(mid_cyan_y_values) / len(mid_cyan_y_values)
             logging.debug(f"Mean Cyan Y Value: {mean_cyan_y_value}")
             # get cursor and mv
             cursor, mv = CalculationTasks.get_cursor_and_mv(mean_cyan_y_value)
             logging.debug(f"Cursor: {cursor}, MV: {mv}")
-            
+
             # turn on scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
 
@@ -340,4 +347,72 @@ class MyGUI(QMainWindow):
             pixmap = QPixmap(local_file_path)
             self.display_image_and_title(pixmap, f"WB n1 value: {mv}")
 
-        logging.info("-------------------- Auto White Balance Done --------------------")
+        logging.info(
+            "-------------------- Auto White Balance Done --------------------"
+        )
+
+    @asyncSlot()
+    async def clicked_auto_adjust_sat(self):
+        self.debug_console_controller.reset_light_level()
+        logging.info("-------------------- Auto Adjust Saturation --------------------")
+        local_file_path = os.path.join(
+            self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
+        )
+        light_level = 0
+        mv_queue = []
+        light_level_queue = []
+        queue_size = 3
+        while True:
+            class_, mv = await self.classify_saturation(local_file_path)
+            logging.info(f"Class: {class_}, MV: {mv}")
+            logging.info(f"Current Light Level: {light_level}")
+            if class_ == "Just Saturated":
+                break
+
+            # append new light_level and mv values to queue and maintain its size
+            light_level_queue.append(light_level)
+            mv_queue.append(mv)
+
+            if len(light_level_queue) > queue_size and len(mv_queue) > queue_size:
+                light_level_queue.pop(0)
+                mv_queue.pop(0)
+
+            if len(set(light_level_queue)) == 2 and len(light_level_queue)>2:
+                logging.info("Oscillation detected. Please adjust manually.")
+                break
+
+            # if we have enough data points, perform linear regression
+            if len(mv_queue) >= queue_size and mv < CalculationConstants.TARGET_SATURATION_MV_VALUE * 0.95:
+                x = np.array(light_level_queue)
+                y = np.array(mv_queue)
+                coefficients = np.polyfit(x, y, 1)
+                slope = coefficients[0]
+                intercept = coefficients[1]
+
+                # predict the light level that would give an mv value close to the target
+                predicted_light_level = (CalculationConstants.TARGET_SATURATION_MV_VALUE * 0.95 - intercept) / slope
+                predicted_light_level = int(round(min(max(predicted_light_level, 0), 255)))  # ensure predicted_light_level is within 0-255, prevent overflow
+
+                # adjust the light level towards the predicted_light_level
+                logging.info(f"Predicted Light Level: {predicted_light_level}")
+                self.debug_console_controller.tune_to_target_level(predicted_light_level, light_level)
+                light_level = predicted_light_level
+
+            elif mv < CalculationConstants.TARGET_SATURATION_MV_VALUE * 0.95:
+                logging.info("mv is below threshold, tuning up light")
+                self.debug_console_controller.tune_up_light()
+                light_level += 1
+            else:
+                if class_ == "Under Saturated":
+                    logging.info("Single stepping up")
+                    self.debug_console_controller.tune_up_light()
+                    light_level += 1
+                elif class_ == "Over Saturated":
+                    logging.info("Single stepping down")
+                    self.debug_console_controller.tune_down_light()
+                    light_level -= 1
+                
+
+        logging.info(
+            "-------------------- Auto Adjust Saturation Done --------------------"
+        )
