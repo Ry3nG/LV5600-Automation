@@ -102,7 +102,6 @@ class WFMCommand:
 
         return "WFM:CURSOR:UNIT:" + ch + " " + input
 
-
 class CaptureCommand:
     @staticmethod
     def make(input):

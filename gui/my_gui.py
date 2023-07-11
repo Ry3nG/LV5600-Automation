@@ -16,7 +16,7 @@ from PyQt5 import uic
 from PyQt5.QtGui import QIcon,QPixmap
 from qasync import asyncSlot
 from PyQt5.QtCore import Qt
-from constants import FTPConstants
+from constants import CalculationConstants, FTPConstants
 from controllers.ftp_session_controller import FTPSession
 
 from controllers.telnet_controller import TelnetController
@@ -29,6 +29,7 @@ from gui.ftp_settings_dialog import FTPSettingsDialog
 from gui.log_handler import LogHandler
 
 from tasks.lv5600_tasks import LV5600Tasks
+from tasks.calculation_tasks import CalculationTasks
 
 
 class MyGUI(QMainWindow):
@@ -82,6 +83,7 @@ class MyGUI(QMainWindow):
         self.pushButton_initialize_lv5600.clicked.connect(self.clicked_initialize_lv5600)
         self.pushButton_capture_n_send_bmp.clicked.connect(self.clicked_capture_n_send_bmp)
         self.pushButton_recall_preset.clicked.connect(self.clicked_recall_preset)
+        self.pushButton_capture_n_classify_sat.clicked.connect(self.clicked_capture_n_classify_sat)
 
     def login(self):
         if (
@@ -222,10 +224,40 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_recall_preset(self):
-        
         preset_number, ok = QInputDialog.getInt(self, "Recall Preset", "Enter Preset Number (1-60):", 1, 1, 60, 1)
         if ok:
             logging.info(f"-------------------- Recalling Preset {preset_number} --------------------")
             await LV5600Tasks.recall_preset(self.telnet_client, preset_number)
             logging.info(f"-------------------- Preset {preset_number} recalled --------------------")
         
+    @asyncSlot()
+    async def clicked_capture_n_classify_sat(self):
+        logging.info("-------------------- Capturing and classifying SAT --------------------")
+        local_file_path = os.path.join(self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP)
+        with FTPSession(self.ftp_client) as ftp_client:
+            # turn off scale and cursor
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
+            # capture an image
+            await LV5600Tasks.capture_n_send_bmp(self.telnet_client, ftp_client, local_file_path)
+            # preprocess the image
+            mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan("SAT")
+            logging.debug(f"Mid Cyan Y Value: {mid_cyan_y_value}")
+            # get cursor and mv
+            cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
+            logging.debug(f"Cursor: {cursor}, MV: {mv}")
+            # classify SAT using mv 
+            class_ = CalculationTasks.classify_mv_level(mv,CalculationConstants.TARGET_SATURATION_MV_VALUE)
+            if class_ == "pass":
+                class_ = "Just Saturated"
+            elif class_ == "low":
+                class_ = "Under Saturated"
+            elif class_ == "high":
+                class_ = "Over Saturated"
+            
+            # turn on scale and cursor
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
+            
+            # display in graphics view
+            pixmap = QPixmap(local_file_path)
+            self.display_image_and_title(pixmap, f"SAT: {class_}")
+        logging.info("-------------------- SAT captured and classified --------------------")
