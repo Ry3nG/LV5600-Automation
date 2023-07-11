@@ -125,7 +125,7 @@ class CalculationTasks:
             )
         ) * LV5600Constants.MAX_CURSOR_VALUE
 
-        current_mv = round(cursor_level * CalculationConstants.CURSOR_TO_MV_FACTOR, 2)
+        current_mv = round(cursor_level * CalculationConstants.CURSOR_TO_MV_FACTOR, 1)
         cursor_level = int(cursor_level)
 
         return cursor_level, current_mv

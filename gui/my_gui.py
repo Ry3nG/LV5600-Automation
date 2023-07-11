@@ -9,11 +9,11 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QInputDialog,
     QGraphicsScene,
-    QGraphicsPixmapItem
+    QGraphicsPixmapItem,
 )
 
 from PyQt5 import uic
-from PyQt5.QtGui import QIcon,QPixmap
+from PyQt5.QtGui import QIcon, QPixmap
 from qasync import asyncSlot
 from PyQt5.QtCore import Qt
 from constants import CalculationConstants, FTPConstants
@@ -76,14 +76,20 @@ class MyGUI(QMainWindow):
         self.actionLocal_File_Path = self.findChild(QAction, "actionLocal_File_Path")
         self.actionLocal_File_Path.triggered.connect(self.open_local_file_path_dialog)  # type: ignore
 
-
         # todo - setup other GUI components and signal-slot connections
         self.pushButton_login.clicked.connect(self.login)
         self.pushButton_establish_connection.clicked.connect(self.establish_connection)
-        self.pushButton_initialize_lv5600.clicked.connect(self.clicked_initialize_lv5600)
-        self.pushButton_capture_n_send_bmp.clicked.connect(self.clicked_capture_n_send_bmp)
+        self.pushButton_initialize_lv5600.clicked.connect(
+            self.clicked_initialize_lv5600
+        )
+        self.pushButton_capture_n_send_bmp.clicked.connect(
+            self.clicked_capture_n_send_bmp
+        )
         self.pushButton_recall_preset.clicked.connect(self.clicked_recall_preset)
-        self.pushButton_capture_n_classify_sat.clicked.connect(self.clicked_capture_n_classify_sat)
+        self.pushButton_capture_n_classify_sat.clicked.connect(
+            self.clicked_capture_n_classify_sat
+        )
+        self.pushButton_auto_wb.clicked.connect(self.clicked_auto_wb)
 
     def login(self):
         if (
@@ -103,6 +109,41 @@ class MyGUI(QMainWindow):
             message.setText("Invalid Username or Password")
             message.setIcon(QMessageBox.Critical)
             message.exec()
+
+    def open_telnet_settings_dialog(self):
+        # Create a new TelnetSettingsDialog
+        dialog = TelnetSettingsDialog(self.app_config)
+        logging.info("Telnet settings dialog created")
+        # Show the dialog modally. If the user saves the settings, restart the telnet and ftp clients.
+        if dialog.exec():
+            logging.info("Telnet settings changed. Restarting Telnet and FTP clients")
+            self.telnet_client = TelnetController(
+                self.app_config.get_telnet_address(),
+                self.app_config.get_telnet_port(),
+                self.app_config.get_telnet_username(),
+                self.app_config.get_telnet_password(),
+            )
+
+    def open_ftp_settings_dialog(self):
+        # Create a new FTPSettingsDialog
+        dialog = FTPSettingsDialog(self.app_config)
+        logging.info("FTP settings dialog created")
+        # Show the dialog modally. If the user saves the settings, restart the ftp client.
+        if dialog.exec():
+            logging.info("FTP settings changed. Restarting FTP client")
+            self.ftp_client = FTPController(
+                self.app_config.get_ftp_address(),
+                self.app_config.get_ftp_username(),
+                self.app_config.get_ftp_password(),
+            )
+
+    def open_local_file_path_dialog(self):
+        # let the user select a local file path and write back to the config file
+        local_file_path = QFileDialog.getExistingDirectory(
+            self, "Select Local File Path"
+        )
+        if local_file_path:
+            self.app_config.set_local_file_path(local_file_path)
 
     @asyncSlot()
     async def establish_connection(self):
@@ -155,42 +196,6 @@ class MyGUI(QMainWindow):
         self.graphicsView.setEnabled(True)
         self.label_graphics.setEnabled(True)
 
-    def open_telnet_settings_dialog(self):
-        # Create a new TelnetSettingsDialog
-        dialog = TelnetSettingsDialog(self.app_config)
-        logging.info("Telnet settings dialog created")
-        # Show the dialog modally. If the user saves the settings, restart the telnet and ftp clients.
-        if dialog.exec():
-            logging.info("Telnet settings changed. Restarting Telnet and FTP clients")
-            self.telnet_client = TelnetController(
-                self.app_config.get_telnet_address(),
-                self.app_config.get_telnet_port(),
-                self.app_config.get_telnet_username(),
-                self.app_config.get_telnet_password(),
-            )
-
-    def open_ftp_settings_dialog(self):
-        # Create a new FTPSettingsDialog
-        dialog = FTPSettingsDialog(self.app_config)
-        logging.info("FTP settings dialog created")
-        # Show the dialog modally. If the user saves the settings, restart the ftp client.
-        if dialog.exec():
-            logging.info("FTP settings changed. Restarting FTP client")
-            self.ftp_client = FTPController(
-                self.app_config.get_ftp_address(),
-                self.app_config.get_ftp_username(),
-                self.app_config.get_ftp_password(),
-            )
-
-    def open_local_file_path_dialog(self):
-        # let the user select a local file path and write back to the config file
-        local_file_path = QFileDialog.getExistingDirectory(
-            self, "Select Local File Path"
-        )
-        if local_file_path:
-            self.app_config.set_local_file_path(local_file_path)
-
-
     def display_image_and_title(self, pixmap, title):
         new_size = self.graphicsView.size()
         pixmap = pixmap.scaled(new_size, Qt.KeepAspectRatio)  # type: ignore
@@ -213,10 +218,16 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_capture_n_send_bmp(self):
-        logging.info("-------------------- Capturing and sending BMP --------------------")
-        local_file_path = os.path.join(self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP)
+        logging.info(
+            "-------------------- Capturing and sending BMP --------------------"
+        )
+        local_file_path = os.path.join(
+            self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
+        )
         with FTPSession(self.ftp_client) as ftp_client:
-            await LV5600Tasks.capture_n_send_bmp(self.telnet_client, ftp_client, local_file_path)
+            await LV5600Tasks.capture_n_send_bmp(
+                self.telnet_client, ftp_client, local_file_path
+            )
             # display in graphics view
             pixmap = QPixmap(local_file_path)
             self.display_image_and_title(pixmap, "Snapshot")
@@ -224,40 +235,109 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_recall_preset(self):
-        preset_number, ok = QInputDialog.getInt(self, "Recall Preset", "Enter Preset Number (1-60):", 1, 1, 60, 1)
+        preset_number, ok = QInputDialog.getInt(
+            self, "Recall Preset", "Enter Preset Number (1-60):", 1, 1, 60, 1
+        )
         if ok:
-            logging.info(f"-------------------- Recalling Preset {preset_number} --------------------")
+            logging.info(
+                f"-------------------- Recalling Preset {preset_number} --------------------"
+            )
             await LV5600Tasks.recall_preset(self.telnet_client, preset_number)
-            logging.info(f"-------------------- Preset {preset_number} recalled --------------------")
-        
+            logging.info(
+                f"-------------------- Preset {preset_number} recalled --------------------"
+            )
+
     @asyncSlot()
     async def clicked_capture_n_classify_sat(self):
-        logging.info("-------------------- Capturing and classifying SAT --------------------")
-        local_file_path = os.path.join(self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP)
+        logging.info(
+            "-------------------- Capturing and classifying SAT --------------------"
+        )
+        local_file_path = os.path.join(
+            self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
+        )
         with FTPSession(self.ftp_client) as ftp_client:
             # turn off scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
-            # capture an image
-            await LV5600Tasks.capture_n_send_bmp(self.telnet_client, ftp_client, local_file_path)
-            # preprocess the image
-            mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan("SAT")
-            logging.debug(f"Mid Cyan Y Value: {mid_cyan_y_value}")
+
+            # capture multiple images and preprocess them to get the mean mid_cyan_y_value
+            mid_cyan_y_values = []
+            for i in range(CalculationConstants.AVERAGE_COUNT):
+                logging.info(f"Processing image {i+1}")
+                await LV5600Tasks.capture_n_send_bmp(
+                    self.telnet_client, ftp_client, local_file_path
+                )
+                mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan("SAT")
+                mid_cyan_y_values.append(mid_cyan_y_value)
+            
+            # get the mean mid_cyan_y_value
+            mean_cyan_y_value = sum(mid_cyan_y_values) / len(mid_cyan_y_values)
+            logging.debug(f"Mean Cyan Y Value: {mean_cyan_y_value}")
             # get cursor and mv
-            cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
+            cursor, mv = CalculationTasks.get_cursor_and_mv(mean_cyan_y_value)
             logging.debug(f"Cursor: {cursor}, MV: {mv}")
-            # classify SAT using mv 
-            class_ = CalculationTasks.classify_mv_level(mv,CalculationConstants.TARGET_SATURATION_MV_VALUE)
+            # classify SAT using mv
+            class_ = CalculationTasks.classify_mv_level(
+                mv, CalculationConstants.TARGET_SATURATION_MV_VALUE
+            )
             if class_ == "pass":
                 class_ = "Just Saturated"
             elif class_ == "low":
                 class_ = "Under Saturated"
             elif class_ == "high":
                 class_ = "Over Saturated"
-            
+
             # turn on scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
-            
+
+            # capture a new image as result
+            await LV5600Tasks.capture_n_send_bmp(
+                self.telnet_client, ftp_client, local_file_path
+            )
             # display in graphics view
             pixmap = QPixmap(local_file_path)
             self.display_image_and_title(pixmap, f"SAT: {class_}")
-        logging.info("-------------------- SAT captured and classified --------------------")
+        logging.info(
+            "-------------------- SAT captured and classified --------------------"
+        )
+
+    @asyncSlot()
+    async def clicked_auto_wb(self):
+        logging.info("-------------------- Auto White Balance --------------------")
+        local_file_path = os.path.join(
+            self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
+        )
+        with FTPSession(self.ftp_client) as ftp_client:
+            # turn off scale and cursor
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
+
+            # capture multiple images and preprocess them to get the mean mid_cyan_y_value
+            mid_cyan_y_values = []
+            for i in range(CalculationConstants.AVERAGE_COUNT):
+                logging.info(f"Processing image {i+1}")
+                # capture an image
+                await LV5600Tasks.capture_n_send_bmp(
+                    self.telnet_client, ftp_client, local_file_path
+                )
+                # preprocess the image
+                mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan("WB")
+                mid_cyan_y_values.append(mid_cyan_y_value)
+            
+            # get the mean mid_cyan_y_value
+            mean_cyan_y_value = sum(mid_cyan_y_values) / len(mid_cyan_y_values)
+            logging.debug(f"Mean Cyan Y Value: {mean_cyan_y_value}")
+            # get cursor and mv
+            cursor, mv = CalculationTasks.get_cursor_and_mv(mean_cyan_y_value)
+            logging.debug(f"Cursor: {cursor}, MV: {mv}")
+            
+            # turn on scale and cursor
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
+
+            # capture a new image as result
+            await LV5600Tasks.capture_n_send_bmp(
+                self.telnet_client, ftp_client, local_file_path
+            )
+            # display in graphics view
+            pixmap = QPixmap(local_file_path)
+            self.display_image_and_title(pixmap, f"WB n1 value: {mv}")
+
+        logging.info("-------------------- Auto White Balance Done --------------------")
