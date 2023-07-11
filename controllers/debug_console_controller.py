@@ -60,11 +60,9 @@ class DebugConsoleController:
 
         # Move the cursor
         pyautogui.moveTo(screen_x, screen_y, duration=0.25)
-        time.sleep(0.5)
 
         # Perform a left mouse click
         pyautogui.click()
-        time.sleep(0.5)
 
         return True
 
@@ -80,7 +78,6 @@ class DebugConsoleController:
         """
         # Press the key
         pyautogui.press(key)
-        time.sleep(0.5)
 
     # Util Functions
     def tune_up_light(self):
@@ -163,3 +160,19 @@ class DebugConsoleController:
 
         return True
 
+    def reset_light_level(self):
+        """
+        Resets the light setting to the default value.
+        a dumb method of resetting the light level
+        scrolling all the way to the top and then scrolling all the way to light level 00
+
+        Returns:
+        None
+        """
+        self.move_and_click(self.LIGHT_SETTING_X, self.LIGHT_SETTING_Y)
+        # press home button
+        self.press_key('home')
+        for i in range(5):
+            self.press_key('down')
+        self.press_key('enter')
+        self.move_and_click(self.DELIVERY_SETTING_X, self.DELIVERY_SETTING_Y)
