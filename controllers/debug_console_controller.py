@@ -30,8 +30,12 @@ class DebugConsoleController:
     ND_SETTING_Y = 205
     LIGHT_SETTING_X = 635
     LIGHT_SETTING_Y = 194
-    DELIVERY_SETTING_X = 670
-    DELIVERY_SETTING_Y = 194
+    AGC_SETTING_X = 635
+    AGC_SETTING_Y = 173
+    DELIVERY_AGC_SETTING_X = 670
+    DELIVERY_AGC_SETTING_Y = 173
+    DELIVERY_LIGHT_SETTING_X = 670
+    DELIVERY_LIGHT_SETTING_Y = 194
 
     def __init__(self):
         """
@@ -90,7 +94,7 @@ class DebugConsoleController:
         self.move_and_click(self.LIGHT_SETTING_X, self.LIGHT_SETTING_Y)
         self.press_key('down')
         self.press_key('enter')
-        self.move_and_click(self.DELIVERY_SETTING_X, self.DELIVERY_SETTING_Y)
+        self.move_and_click(self.DELIVERY_LIGHT_SETTING_X, self.DELIVERY_LIGHT_SETTING_Y)
 
     def tune_down_light(self):
         """
@@ -102,7 +106,7 @@ class DebugConsoleController:
         self.move_and_click(self.LIGHT_SETTING_X, self.LIGHT_SETTING_Y)
         self.press_key('up')
         self.press_key('enter')
-        self.move_and_click(self.DELIVERY_SETTING_X, self.DELIVERY_SETTING_Y)
+        self.move_and_click(self.DELIVERY_LIGHT_SETTING_X, self.DELIVERY_LIGHT_SETTING_Y)
     
     def tune_to_target_level(self,target_level, current_level):
         """
@@ -127,14 +131,14 @@ class DebugConsoleController:
             for i in range(num_of_press):
                 self.press_key('down')
             self.press_key('enter')
-            self.move_and_click(self.DELIVERY_SETTING_X, self.DELIVERY_SETTING_Y)
+            self.move_and_click(self.DELIVERY_LIGHT_SETTING_X, self.DELIVERY_LIGHT_SETTING_Y)
         elif target_level < current_level:
             num_of_press = current_level - target_level
             self.move_and_click(self.LIGHT_SETTING_X, self.LIGHT_SETTING_Y)
             for i in range(num_of_press):
                 self.press_key('up')
             self.press_key('enter')
-            self.move_and_click(self.DELIVERY_SETTING_X, self.DELIVERY_SETTING_Y)
+            self.move_and_click(self.DELIVERY_LIGHT_SETTING_X, self.DELIVERY_LIGHT_SETTING_Y)
         else:
             pass
             
@@ -175,4 +179,39 @@ class DebugConsoleController:
         for i in range(5):
             self.press_key('down')
         self.press_key('enter')
-        self.move_and_click(self.DELIVERY_SETTING_X, self.DELIVERY_SETTING_Y)
+        self.move_and_click(self.DELIVERY_LIGHT_SETTING_X, self.DELIVERY_LIGHT_SETTING_Y)
+    
+    def set_AGC_mode(self, mode):
+        """
+        Sets the AGC mode to the specified value.
+
+        Args:
+        mode (str): The mode to be set, can be ON, OFF, WLI, NBI, RDI
+
+        Returns:
+        None
+        """
+        self.move_and_click(self.AGC_SETTING_X, self.AGC_SETTING_Y)
+        self.press_key('home')
+        num_of_press = 0
+        if mode == 'ON':
+            num_of_press = 0
+        elif mode == 'OFF':
+            num_of_press = 1
+        elif mode == 'WLI':
+            num_of_press = 2
+        elif mode == 'NBI':
+            num_of_press = 3
+        elif mode == 'RDI':
+            num_of_press = 4
+        else:
+            raise ValueError('Invalid AGC mode!')
+
+        for i in range(num_of_press):
+            self.press_key('down')
+        self.press_key('enter')
+        self.move_and_click(self.DELIVERY_AGC_SETTING_X, self.DELIVERY_AGC_SETTING_Y)
+        
+
+
+        
