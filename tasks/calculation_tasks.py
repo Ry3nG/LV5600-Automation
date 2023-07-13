@@ -49,7 +49,7 @@ class CalculationTasks:
             return np.nan
 
     @staticmethod
-    def classify_mv_level(mv_value, target) -> str:
+    def classify_mv_level(mv_value, target,tolerance) -> str:
         try:
             if mv_value is None:
                 raise ValueError("mv_value is None")
@@ -62,10 +62,9 @@ class CalculationTasks:
             if target <= 0:
                 raise ValueError("target must be greater than 0")
 
-            tolerance = CalculationConstants.TOLERANCE
 
-            target_high = target * (1 + tolerance)
-            target_low = min(target * (1 - tolerance),CalculationConstants.MAX_SATURATION_MV_VALUE)
+            target_high = min(target * (1 + tolerance),CalculationConstants.MAX_SATURATION_MV_VALUE)
+            target_low = max(target * (1 - tolerance),0)
 
             if mv_value > target_high:
                 return "high"
@@ -126,6 +125,6 @@ class CalculationTasks:
         ) * LV5600Constants.MAX_CURSOR_VALUE
 
         current_mv = round(cursor_level * CalculationConstants.CURSOR_TO_MV_FACTOR, 1)
-        cursor_level = int(cursor_level)
+        cursor_level = round(cursor_level, 0)
 
         return cursor_level, current_mv
