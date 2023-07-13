@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1010</width>
+    <width>1123</width>
     <height>764</height>
    </rect>
   </property>
@@ -72,7 +72,7 @@
       <x>180</x>
       <y>10</y>
       <width>41</width>
-      <height>31</height>
+      <height>51</height>
      </rect>
     </property>
     <property name="text">
@@ -86,9 +86,9 @@
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>40</y>
-      <width>711</width>
-      <height>481</height>
+      <y>50</y>
+      <width>854</width>
+      <height>480</height>
      </rect>
     </property>
    </widget>
@@ -96,7 +96,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>80</y>
+      <y>70</y>
       <width>241</width>
       <height>16</height>
      </rect>
@@ -207,9 +207,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>40</x>
+      <x>30</x>
       <y>540</y>
-      <width>931</width>
+      <width>1081</width>
       <height>181</height>
      </rect>
     </property>
@@ -253,7 +253,7 @@
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>3</y>
+      <y>10</y>
       <width>451</width>
       <height>31</height>
      </rect>
@@ -270,7 +270,7 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>870</x>
+      <x>1010</x>
       <y>700</y>
       <width>101</width>
       <height>20</height>
@@ -302,7 +302,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1010</width>
+     <width>1123</width>
      <height>21</height>
     </rect>
    </property>
@@ -313,23 +313,50 @@
     <addaction name="actionTelnet_Settings"/>
     <addaction name="actionFTP_Settings"/>
     <addaction name="actionLocal_File_Path"/>
+    <addaction name="actionEdit_target_tolerance"/>
+    <addaction name="actionEdit_Saturation_Target_mV"/>
    </widget>
    <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionTelnet_Settings">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Telnet Settings</string>
    </property>
   </action>
   <action name="actionFTP_Settings">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>FTP Settings</string>
    </property>
   </action>
   <action name="actionLocal_File_Path">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Edit Local File Path</string>
+   </property>
+  </action>
+  <action name="actionEdit_target_tolerance">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit target tolerance</string>
+   </property>
+  </action>
+  <action name="actionEdit_Saturation_Target_mV">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit Saturation Target mV</string>
    </property>
   </action>
  </widget>
