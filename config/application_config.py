@@ -10,10 +10,11 @@ class AppConfig:
         # determine if the application is a script file or frozen exe
         if getattr(sys, 'frozen', False):
             application_path = sys._MEIPASS # type: ignore
+            config_file_path = os.path.join(application_path, 'config','config.ini')
         else:
             application_path = os.path.dirname(os.path.abspath(__file__))
+            config_file_path = os.path.join(application_path,'config.ini')
 
-        config_file_path = os.path.join(application_path, 'config','config.ini')
         self.config.read(config_file_path)
         logging.debug("Config file path: " + config_file_path)
         logging.debug("Config file contents: ")
