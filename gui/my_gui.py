@@ -1,3 +1,4 @@
+from functools import partial, partialmethod
 import logging
 import os
 import numpy as np
@@ -57,6 +58,8 @@ class MyGUI(QMainWindow):
         )
         self.debug_console_controller = DebugConsoleController()
 
+        self.wb_n1_value = -1
+
         # initialize the log handler
         self.log_handler = LogHandler(self.textBrowser)
         self.log_handler.setFormatter(
@@ -68,16 +71,23 @@ class MyGUI(QMainWindow):
         # set echo mode to Password for the password fields
         self.lineEdit_pwd.setEchoMode(QLineEdit.Password)
 
-        # * binding of the menu bar actions to slots
-        # find the actionTelnet_Settings and actionFTP_Settings actions and connect their triggered signals to slots
+        # TODO : Bind menu bar actions to functions here
+
         self.actionTelnet_Settings = self.findChild(QAction, "actionTelnet_Settings")
         self.actionTelnet_Settings.triggered.connect(self.open_telnet_settings_dialog)  # type: ignore
         self.actionFTP_Settings = self.findChild(QAction, "actionFTP_Settings")
         self.actionFTP_Settings.triggered.connect(self.open_ftp_settings_dialog)  # type: ignore
         self.actionLocal_File_Path = self.findChild(QAction, "actionLocal_File_Path")
         self.actionLocal_File_Path.triggered.connect(self.open_local_file_path_dialog)  # type: ignore
-
-        # todo - setup other GUI components and signal-slot connections
+        self.actionEdit_target_tolerance = self.findChild(
+            QAction, "actionEdit_target_tolerance"
+        )
+        self.actionEdit_target_tolerance.triggered.connect(self.open_target_tolerance_dialog)  # type: ignore
+        self.actionEdit_Saturation_Target_mV = self.findChild(
+            QAction, "actionEdit_Saturation_Target_mV"
+        )
+        self.actionEdit_Saturation_Target_mV.triggered.connect(self.open_saturation_target_dialog)  # type: ignore
+        # TODO : Bind button actions to functions here
         self.pushButton_login.clicked.connect(self.login)
         self.pushButton_establish_connection.clicked.connect(self.establish_connection)
         self.pushButton_initialize_lv5600.clicked.connect(
@@ -92,6 +102,12 @@ class MyGUI(QMainWindow):
         )
         self.pushButton_auto_wb.clicked.connect(self.clicked_auto_wb)
         self.pushButton_auto_adjust_sat.clicked.connect(self.clicked_auto_adjust_sat)
+        self.pushButton_auto_adjust_n1_plus20.clicked.connect(
+            partial(self.clicked_auto_adjust_noise, mode="UP")
+        )
+        self.pushButton_auto_adjust_n1_minus20.clicked.connect(
+            partial(self.clicked_auto_adjust_noise, mode="DOWN")
+        )
 
     def login(self):
         if (
@@ -105,6 +121,11 @@ class MyGUI(QMainWindow):
 
             # enable establish connection related components
             self.pushButton_establish_connection.setEnabled(True)
+            self.actionTelnet_Settings.setEnabled(True) # type: ignore
+            self.actionFTP_Settings.setEnabled(True) # type: ignore
+            self.actionLocal_File_Path.setEnabled(True) # type: ignore
+            self.actionEdit_target_tolerance.setEnabled(True) # type: ignore
+            self.actionEdit_Saturation_Target_mV.setEnabled(True) # type: ignore
         else:
             message = QMessageBox()
             message.setWindowTitle("Error")
@@ -115,7 +136,7 @@ class MyGUI(QMainWindow):
     def open_telnet_settings_dialog(self):
         # Create a new TelnetSettingsDialog
         dialog = TelnetSettingsDialog(self.app_config)
-        logging.info("Telnet settings dialog created")
+        logging.debug("Telnet settings dialog created")
         # Show the dialog modally. If the user saves the settings, restart the telnet and ftp clients.
         if dialog.exec():
             logging.info("Telnet settings changed. Restarting Telnet and FTP clients")
@@ -129,7 +150,7 @@ class MyGUI(QMainWindow):
     def open_ftp_settings_dialog(self):
         # Create a new FTPSettingsDialog
         dialog = FTPSettingsDialog(self.app_config)
-        logging.info("FTP settings dialog created")
+        logging.debug("FTP settings dialog created")
         # Show the dialog modally. If the user saves the settings, restart the ftp client.
         if dialog.exec():
             logging.info("FTP settings changed. Restarting FTP client")
@@ -146,15 +167,34 @@ class MyGUI(QMainWindow):
         )
         if local_file_path:
             self.app_config.set_local_file_path(local_file_path)
+            self.app_config.save_config_to_file()
+
+    def open_target_tolerance_dialog(self):
+        # let the user select a target tolerance and write back to the config file
+        target_tolerance, ok = QInputDialog.getDouble(
+            self, "Target Tolerance", "Enter Target Tolerance", 0.01, 0.0, 100.0, 3
+        )
+        if ok:
+            self.app_config.set_target_tolerance(target_tolerance)
+            self.app_config.save_config_to_file()
+
+    def open_saturation_target_dialog(self):
+        # let the user select a saturation target and write back to the config file
+        saturation_target, ok = QInputDialog.getDouble(
+            self, "Saturation Target", "Enter Saturation Target", 769.0, 0.0, 770.0, 1
+        )
+        if ok:
+            self.app_config.set_target_saturation(saturation_target)
+            self.app_config.save_config_to_file()
 
     @asyncSlot()
     async def establish_connection(self):
         try:
             logging.info("Establishing Telnet connection")
-            logging.info("Telnet address: " + self.app_config.get_telnet_address())
-            logging.info("Telnet port: " + str(self.app_config.get_telnet_port()))
-            logging.info("Telnet username: " + self.app_config.get_telnet_username())
-            logging.info("Telnet password: " + self.app_config.get_telnet_password())
+            logging.debug("Telnet address: " + self.app_config.get_telnet_address())
+            logging.debug("Telnet port: " + str(self.app_config.get_telnet_port()))
+            logging.debug("Telnet username: " + self.app_config.get_telnet_username())
+            logging.debug("Telnet password: " + self.app_config.get_telnet_password())
             status = await self.telnet_client.connect()
             if not status:
                 logging.error("Error establishing Telnet connection")
@@ -250,7 +290,12 @@ class MyGUI(QMainWindow):
             )
 
     @asyncSlot()
-    async def classify_saturation(self, local_file_path):
+    async def average_n_classify_helper(
+        self,
+        local_file_path,
+        target=CalculationConstants.MAX_SATURATION_MV_VALUE,
+        mode="SAT",
+    ):
         with FTPSession(self.ftp_client) as ftp_client:
             # turn off scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
@@ -262,7 +307,9 @@ class MyGUI(QMainWindow):
                 await LV5600Tasks.capture_n_send_bmp(
                     self.telnet_client, ftp_client, local_file_path
                 )
-                mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan("SAT")
+                mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
+                    mode
+                )
                 mid_cyan_y_values.append(mid_cyan_y_value)
 
             # get the mean mid_cyan_y_value
@@ -274,15 +321,16 @@ class MyGUI(QMainWindow):
             logging.debug(f"Cursor: {cursor}, MV: {mv}")
 
             # classify SAT using mv
-            class_ = CalculationTasks.classify_mv_level(
-                mv, CalculationConstants.TARGET_SATURATION_MV_VALUE
-            )
-            if class_ == "pass":
-                class_ = "Just Saturated"
-            elif class_ == "low":
-                class_ = "Under Saturated"
-            elif class_ == "high":
-                class_ = "Over Saturated"
+            tolerance = self.app_config.get_target_tolerance()
+            class_ = CalculationTasks.classify_mv_level(mv, target, tolerance)
+
+            if mode == "SAT":
+                if class_ == "pass":
+                    class_ = "Just Saturated"
+                elif class_ == "low":
+                    class_ = "Under Saturated"
+                elif class_ == "high":
+                    class_ = "Over Saturated"
 
             # turn on scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
@@ -292,18 +340,21 @@ class MyGUI(QMainWindow):
     @asyncSlot()
     async def clicked_capture_n_classify_sat(self):
         logging.info("Capturing and classifying SAT")
-        local_file_path = os.path.join(self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP)
-        class_, mv = await self.classify_saturation(local_file_path)
+        local_file_path = os.path.join(
+            self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
+        )
+        class_, mv = await self.average_n_classify_helper(local_file_path)
 
         # capture a new image as result
         with FTPSession(self.ftp_client) as ftp_client:
-            await LV5600Tasks.capture_n_send_bmp(self.telnet_client, ftp_client, local_file_path)
-        
+            await LV5600Tasks.capture_n_send_bmp(
+                self.telnet_client, ftp_client, local_file_path
+            )
+
         # display in graphics view
         pixmap = QPixmap(local_file_path)
         self.display_image_and_title(pixmap, f"SAT: {class_}")
         logging.info("SAT captured and classified")
-
 
     @asyncSlot()
     async def clicked_auto_wb(self):
@@ -346,6 +397,7 @@ class MyGUI(QMainWindow):
             # display in graphics view
             pixmap = QPixmap(local_file_path)
             self.display_image_and_title(pixmap, f"WB n1 value: {mv}")
+            self.wb_n1_value = mv
 
         logging.info(
             "-------------------- Auto White Balance Done --------------------"
@@ -362,8 +414,9 @@ class MyGUI(QMainWindow):
         mv_queue = []
         light_level_queue = []
         queue_size = 3
+        target = self.app_config.get_target_saturation()
         while True:
-            class_, mv = await self.classify_saturation(local_file_path)
+            class_, mv = await self.average_n_classify_helper(local_file_path)
             logging.info(f"Class: {class_}, MV: {mv}")
             logging.info(f"Current Light Level: {light_level}")
             if class_ == "Just Saturated":
@@ -377,12 +430,31 @@ class MyGUI(QMainWindow):
                 light_level_queue.pop(0)
                 mv_queue.pop(0)
 
-            if len(set(light_level_queue)) == 2 and len(light_level_queue)>2:
-                logging.info("Oscillation detected. Please adjust manually.")
-                break
+            if len(set(light_level_queue)) == 2 and len(light_level_queue) > 2:
+                logging.warning("Oscillation detected. Please adjust manually.")
+                await LV5600Tasks.scale_and_cursor(
+                    self.telnet_client,
+                    True,
+                    target / CalculationConstants.CURSOR_TO_MV_FACTOR,
+                )
+                while True:
+                    message = QMessageBox()
+                    message.setIcon(QMessageBox.Warning)
+                    message.setText("Oscillation detected. Please adjust manually.")
+                    message.setWindowTitle("Warning")
+                    message.setInformativeText("Press OK to continue")
+                    message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                    message.setDefaultButton(QMessageBox.Ok)
+                    ret = message.exec_()
+                    if ret == QMessageBox.Ok:
+                        break
+                continue
 
             # if we have enough data points, perform linear regression
-            if len(mv_queue) >= queue_size and mv < CalculationConstants.TARGET_SATURATION_MV_VALUE * 0.95:
+            if (
+                len(mv_queue) >= queue_size
+                and mv < target * CalculationConstants.JUMP_THRESHOLD
+            ):
                 x = np.array(light_level_queue)
                 y = np.array(mv_queue)
                 coefficients = np.polyfit(x, y, 1)
@@ -390,15 +462,25 @@ class MyGUI(QMainWindow):
                 intercept = coefficients[1]
 
                 # predict the light level that would give an mv value close to the target
-                predicted_light_level = (CalculationConstants.TARGET_SATURATION_MV_VALUE * 0.95 - intercept) / slope
-                predicted_light_level = int(round(min(max(predicted_light_level, 0), 255)))  # ensure predicted_light_level is within 0-255, prevent overflow
+                predicted_light_level = (
+                    target * CalculationConstants.JUMP_THRESHOLD - intercept
+                ) / slope
+                predicted_light_level = int(
+                    round(min(max(predicted_light_level, 0), 255))
+                )  # ensure predicted_light_level is within 0-255, prevent overflow
 
+                # ensure predicted_light_level is greater than current light level
+                predicted_light_level = max(predicted_light_level, light_level)
+                if predicted_light_level <= light_level:
+                    predicted_light_level = light_level + 1
                 # adjust the light level towards the predicted_light_level
                 logging.info(f"Predicted Light Level: {predicted_light_level}")
-                self.debug_console_controller.tune_to_target_level(predicted_light_level, light_level)
+                self.debug_console_controller.tune_to_target_level(
+                    predicted_light_level, light_level
+                )
                 light_level = predicted_light_level
 
-            elif mv < CalculationConstants.TARGET_SATURATION_MV_VALUE * 0.95:
+            elif mv < target * CalculationConstants.JUMP_THRESHOLD:
                 logging.info("mv is below threshold, tuning up light")
                 self.debug_console_controller.tune_up_light()
                 light_level += 1
@@ -411,8 +493,85 @@ class MyGUI(QMainWindow):
                     logging.info("Single stepping down")
                     self.debug_console_controller.tune_down_light()
                     light_level -= 1
-                
 
         logging.info(
             "-------------------- Auto Adjust Saturation Done --------------------"
         )
+
+    @asyncSlot()
+    async def clicked_auto_adjust_noise(self, mode):
+        if mode not in ["UP", "DOWN"]:
+            logging.warning("Invalid mode. Mode must be either 'UP' or 'DOWN'.")
+            message = QMessageBox()
+            message.setIcon(QMessageBox.Warning)
+            message.setText("Invalid mode. Mode must be either 'UP' or 'DOWN'.")
+            message.setWindowTitle("Warning")
+            message.exec_()
+            return
+        if self.wb_n1_value == -1:
+            logging.warning("Please perform Auto WB first!")
+            message = QMessageBox()
+            message.setIcon(QMessageBox.Warning)
+            message.setText("Please perform Auto WB first!")
+            message.setWindowTitle("Warning")
+            message.exec_()
+            return
+        else:
+            logging.info("-------------------- Auto Adjust Noise --------------------")
+            target = self.wb_n1_value + 20 if mode == "UP" else self.wb_n1_value - 20
+
+            self.debug_console_controller.reset_light_level()
+            local_file_path = os.path.join(
+                self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
+            )
+            light_level, mv_queue, light_level_queue, queue_size = 0, [], [], 3
+            while True:
+                class_, mv = await self.average_n_classify_helper(
+                    local_file_path, target=target, mode="NOISE"
+                )
+                logging.info(f"Target mV value: {target}")
+                logging.info(f"Class: {class_}, Current MV: {mv}")
+                logging.info(f"Current Light Level: {light_level}")
+                if class_ == "pass":
+                    break
+
+                # append new light_level and mv values to queue and maintain its size
+                light_level_queue.append(light_level)
+                mv_queue.append(mv)
+
+                if len(light_level_queue) > queue_size and len(mv_queue) > queue_size:
+                    light_level_queue.pop(0)
+                    mv_queue.pop(0)
+
+                if len(set(light_level_queue)) == 2 and len(light_level_queue) > 2:
+                    logging.warning("Oscillation detected. Please adjust manually.")
+                    await LV5600Tasks.scale_and_cursor(
+                        self.telnet_client,
+                        True,
+                        target / CalculationConstants.CURSOR_TO_MV_FACTOR,
+                    )
+                    while True:
+                        message = QMessageBox()
+                        message.setIcon(QMessageBox.Warning)
+                        message.setText("Oscillation detected. Please adjust manually.")
+                        message.setWindowTitle("Warning")
+                        message.setInformativeText("Press OK to continue")
+                        message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                        message.setDefaultButton(QMessageBox.Ok)
+                        ret = message.exec_()
+                        if ret == QMessageBox.Ok:
+                            break
+                    continue
+
+                if class_ == "low":
+                    logging.info("Single stepping up")
+                    self.debug_console_controller.tune_up_light()
+                    light_level += 1
+                elif class_ == "high":
+                    logging.info("Single stepping down")
+                    self.debug_console_controller.tune_down_light()
+                    light_level -= 1
+
+            logging.info(
+                "-------------------- Auto Adjust Noise Done --------------------"
+            )
