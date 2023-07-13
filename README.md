@@ -5,53 +5,57 @@ The LV5600 Automation project is a Proof-of-Concept project, aims to provice a s
 ### Project structure
 The project is structured as follows:
 ```
-LV5600-Automation
-|
-├── .gitignore                    # Specifies files to be ignored by Git
-├── README.md                     # This file
-├── commands                      # Contains the command utilities for the system
-│   ├── command_utils.py
-│   └── __init__.py
-|
-├── config                        # Configuration related files and classes
-│   ├── application_config.py     # Application configuration management
-│   ├── config.ini                # Configuration values
-│   └── __init__.py
-|
-├── constants.py                  # Stores constant values used throughout the project
-|
-├── controllers                   # Classes that control the interaction with the LV5600
-│   ├── debug_console_controller.py
-│   ├── ftp_controller.py
-│   ├── ftp_session_controller.py
-│   ├── telnet_controller.py
-│   └── __init__.py
-|
-├── gui                           # Contains the code for the graphical user interface
-│   ├── ftp_settings_dialog.py    # GUI for the FTP settings dialog
-│   ├── log_handler.py            # Handles the logging in the GUI
-│   ├── my_gui.py                 # Main GUI class
-│   ├── resources                 # Resources used by the GUI
-│   │   ├── LV5600-Automation-GUI.ui  # QtDesigner file for GUI layout
-│   │   └── icon.svg                  # Icon for the GUI
-│   ├── telnet_settings_dialog.py # GUI for the Telnet settings dialog
-│   └── __init__.py
-|
-├── logs                          # Log related files
-│   ├── myapp.log                 # Log file
-│   ├── snapshot.bmp              # Sample snapshot image
-│   └── __init__.py
-|
-├── main.py                       # Entry point for the application
-|
-└── tasks                         # Task classes for LV5600 automation
-    ├── auto_tuning.py
-    ├── capture_and_send_bmp.py
-    ├── display_saturation_result.py
-    ├── lv5600_tasks.py
-    ├── task_util.py
-    └── __init__.py
+|---LV5600-Automation
+|   |---.gitignore
+|   |---.vscode
+|   |   |---settings.json
+|   |---README.md
+|   |---__init__.py
+|   |---commands
+|   |   |---__init__.py
+|   |   |---command_utils.py
+|   |---config
+|   |   |---__init__.py
+|   |   |---application_config.py       
+|   |   |---config.ini
+|   |---constants.py
+|   |---controllers
+|   |   |---__init__.py
+|   |   |---debug_console_controller.py 
+|   |   |---ftp_controller.py
+|   |   |---ftp_session_controller.py   
+|   |   |---telnet_controller.py        
+|   |---gui
+|   |   |---__init__.py
+|   |   |---ftp_settings_dialog.py      
+|   |   |---log_handler.py
+|   |   |---my_gui.py
+|   |   |---resources
+|   |   |   |---LV5600-Automation-GUI.ui
+|   |   |   |---icon.svg
+|   |   |---telnet_settings_dialog.py   
+|   |---logs
+|   |   |---__init__.py
+|   |   |---myapp.log
+|   |   |---snapshot.bmp
+|   |---main.py
+|   |---tasks
+|   |   |---__init__.py
+|   |   |---calculation_tasks.py
+|   |   |---lv5600_tasks.py
 ```
+### Important files
+Some of the most important files to understand include:
+
+* ``main.py``: This is the entry point to the application. It initializes and launches the GUI.
+
+* ``my_gui.py`` located in the **gui** folder: This is where the GUI logic is handled, including button actions and the behavior of other UI elements. This file also includes the core logic of the application, and each of the actions are linked with corresponding tasks or functions in the controller classes.
+
+* ``telnet_controller.py``, ``ftp_controller.py`` and `debug_console_controller.py`` located in the **controllers** folder: These files manage the interactions between the application and external services like Telnet, FTP, and the Debug Console. Changes to how the application interacts with these services would be made here.
+
+* ``lv5600_tasks.py`` and ``calculation_tasks.py`` located in the **tasks** folder: These files define the tasks or actions that the application can perform. If you want to add new functionality to the application, you would likely need to add new tasks here.
+
+* ``application_config.py`` located in the **config** folder: This file handles the reading and writing of the configuration file (config.ini). Any changes to how the application saves or retrieves its settings would be made here.
 ### Installation and Running
 1. Make sure to have Python 3.7+ installed
 2. Clone the repository
