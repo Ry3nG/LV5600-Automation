@@ -39,18 +39,22 @@ class MyGUI(QMainWindow):
     def __init__(self):
         super(MyGUI, self).__init__()
 
-        #determine if the application is a script file or frozen exe
-        if getattr(sys, 'frozen', False):
-            application_path = sys._MEIPASS # type: ignore
+        # determine if the application is a script file or frozen exe
+        if getattr(sys, "frozen", False):
+            application_path = sys._MEIPASS  # type: ignore
         else:
             application_path = os.path.dirname(os.path.abspath(__file__))
 
-        ui_file_path = os.path.join(application_path, "resources", "LV5600-Automation-GUI.ui")
+        ui_file_path = os.path.join(
+            application_path, "resources", "LV5600-Automation-GUI.ui"
+        )
         uic.loadUi(ui_file_path, self)
 
         self.setWindowTitle("LV5600 Automation")
-        self.setWindowIcon(QIcon(os.path.join(application_path, "gui", "resources", "icon.svg")))
-
+        self.setWindowIcon(
+            QIcon(os.path.join(application_path, "resources", "icon.svg"))
+        )
+        self.progressBar.setValue(0)
 
         # initiaize the application config
         self.app_config = AppConfig()
@@ -113,6 +117,7 @@ class MyGUI(QMainWindow):
         )
         self.pushButton_auto_wb.clicked.connect(self.clicked_auto_wb)
         self.pushButton_auto_adjust_sat.clicked.connect(self.clicked_auto_adjust_sat)
+        self.pushButton_SAT_mode.clicked.connect(self.clicked_sat_mode)
         self.pushButton_auto_adjust_n1_plus20.clicked.connect(
             partial(self.clicked_auto_adjust_noise, mode="UP")
         )
@@ -132,11 +137,11 @@ class MyGUI(QMainWindow):
 
             # enable establish connection related components
             self.pushButton_establish_connection.setEnabled(True)
-            self.actionTelnet_Settings.setEnabled(True) # type: ignore
-            self.actionFTP_Settings.setEnabled(True) # type: ignore
-            self.actionLocal_File_Path.setEnabled(True) # type: ignore
-            self.actionEdit_target_tolerance.setEnabled(True) # type: ignore
-            self.actionEdit_Saturation_Target_mV.setEnabled(True) # type: ignore
+            self.actionTelnet_Settings.setEnabled(True)  # type: ignore
+            self.actionFTP_Settings.setEnabled(True)  # type: ignore
+            self.actionLocal_File_Path.setEnabled(True)  # type: ignore
+            self.actionEdit_target_tolerance.setEnabled(True)  # type: ignore
+            self.actionEdit_Saturation_Target_mV.setEnabled(True)  # type: ignore
         else:
             message = QMessageBox()
             message.setWindowTitle("Error")
@@ -241,6 +246,7 @@ class MyGUI(QMainWindow):
         self.pushButton_auto_wb.setEnabled(True)
         self.pushButton_capture_n_classify_sat.setEnabled(True)
         self.pushButton_auto_adjust_sat.setEnabled(True)
+        self.pushButton_SAT_mode.setEnabled(True)
         self.pushButton_recall_preset.setEnabled(True)
         self.pushButton_capture_n_send_bmp.setEnabled(True)
         self.pushButton_auto_adjust_n1_plus20.setEnabled(True)
@@ -248,6 +254,13 @@ class MyGUI(QMainWindow):
         self.textBrowser.setEnabled(True)
         self.graphicsView.setEnabled(True)
         self.label_graphics.setEnabled(True)
+        self.label_n1.setEnabled(True)
+        self.label_n1plus20.setEnabled(True)
+        self.label_n1minus20.setEnabled(True)
+        self.lcdNumber_n1.setEnabled(True)
+        self.lcdNumber_n1plus20.setEnabled(True)
+        self.lcdNumber_n1minus20.setEnabled(True)
+        self.progressBar.setEnabled(True)
 
     def display_image_and_title(self, pixmap, title):
         new_size = self.graphicsView.size()
@@ -274,6 +287,7 @@ class MyGUI(QMainWindow):
         logging.info(
             "-------------------- Capturing and sending BMP --------------------"
         )
+        self.progressBar.setValue(0)
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
         )
@@ -281,9 +295,14 @@ class MyGUI(QMainWindow):
             await LV5600Tasks.capture_n_send_bmp(
                 self.telnet_client, ftp_client, local_file_path
             )
+            mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
+                    "SAT"
+                )
+            cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
             # display in graphics view
             pixmap = QPixmap(local_file_path)
-            self.display_image_and_title(pixmap, "Snapshot")
+            self.display_image_and_title(pixmap, "Current mV: " + str(mv))
+        self.progressBar.setValue(100)
         logging.info("-------------------- BMP captured and sent --------------------")
 
     @asyncSlot()
@@ -295,7 +314,9 @@ class MyGUI(QMainWindow):
             logging.info(
                 f"-------------------- Recalling Preset {preset_number} --------------------"
             )
+            self.progressBar.setValue(0)
             await LV5600Tasks.recall_preset(self.telnet_client, preset_number)
+            self.progressBar.setValue(100)
             logging.info(
                 f"-------------------- Preset {preset_number} recalled --------------------"
             )
@@ -306,6 +327,7 @@ class MyGUI(QMainWindow):
         local_file_path,
         target=CalculationConstants.MAX_SATURATION_MV_VALUE,
         mode="SAT",
+        progressBarOn=True,
     ):
         with FTPSession(self.ftp_client) as ftp_client:
             # turn off scale and cursor
@@ -313,15 +335,21 @@ class MyGUI(QMainWindow):
 
             # capture multiple images and preprocess them to get the mean mid_cyan_y_value
             mid_cyan_y_values = []
+            self.progressBar.setValue(0) if progressBarOn else None
             for i in range(CalculationConstants.AVERAGE_COUNT):
                 logging.info(f"Processing image {i+1}")
                 await LV5600Tasks.capture_n_send_bmp(
                     self.telnet_client, ftp_client, local_file_path
                 )
+                pixmap = QPixmap(local_file_path)
+                self.display_image_and_title(pixmap, "Processing image " + str(i + 1))
                 mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
                     mode
                 )
                 mid_cyan_y_values.append(mid_cyan_y_value)
+                self.progressBar.setValue(
+                    int((i + 1) * 100 / CalculationConstants.AVERAGE_COUNT)
+                ) if progressBarOn else None
 
             # get the mean mid_cyan_y_value
             mean_cyan_y_value = sum(mid_cyan_y_values) / len(mid_cyan_y_values)
@@ -376,7 +404,7 @@ class MyGUI(QMainWindow):
         with FTPSession(self.ftp_client) as ftp_client:
             # turn off scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
-
+            self.progressBar.setValue(0)
             # capture multiple images and preprocess them to get the mean mid_cyan_y_value
             mid_cyan_y_values = []
             for i in range(CalculationConstants.AVERAGE_COUNT):
@@ -385,11 +413,16 @@ class MyGUI(QMainWindow):
                 await LV5600Tasks.capture_n_send_bmp(
                     self.telnet_client, ftp_client, local_file_path
                 )
+                pixmap = QPixmap(local_file_path)
+                self.display_image_and_title(pixmap, "Processing image " + str(i + 1))
                 # preprocess the image
                 mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
                     "WB"
                 )
                 mid_cyan_y_values.append(mid_cyan_y_value)
+                self.progressBar.setValue(
+                    int((i + 1) * 100 / CalculationConstants.AVERAGE_COUNT)
+                )
 
             # get the mean mid_cyan_y_value
             mean_cyan_y_value = sum(mid_cyan_y_values) / len(mid_cyan_y_values)
@@ -409,6 +442,9 @@ class MyGUI(QMainWindow):
             pixmap = QPixmap(local_file_path)
             self.display_image_and_title(pixmap, f"WB n1 value: {mv}")
             self.wb_n1_value = mv
+            self.lcdNumber_n1.display(self.wb_n1_value)
+            self.lcdNumber_n1plus20.display(self.wb_n1_value + 20)
+            self.lcdNumber_n1minus20.display(self.wb_n1_value - 20)
 
         logging.info(
             "-------------------- Auto White Balance Done --------------------"
@@ -426,12 +462,15 @@ class MyGUI(QMainWindow):
         light_level_queue = []
         queue_size = 3
         target = self.app_config.get_target_saturation()
+        self.progressBar.setValue(0)
         while True:
-            class_, mv = await self.average_n_classify_helper(local_file_path)
+            class_, mv = await self.average_n_classify_helper(
+                local_file_path, progressBarOn=False
+            )
+
             logging.info(f"Class: {class_}, MV: {mv}")
             logging.info(f"Current Light Level: {light_level}")
-            if class_ == "Just Saturated":
-                break
+            
 
             # append new light_level and mv values to queue and maintain its size
             light_level_queue.append(light_level)
@@ -504,7 +543,17 @@ class MyGUI(QMainWindow):
                     logging.info("Single stepping down")
                     self.debug_console_controller.tune_down_light()
                     light_level -= 1
+                elif class_ == "Just Saturated":
+                    break
+                else:
+                    logging.error("Invalid class")
+                    break
+            # use current mv and target mv to calculate progress
+            progress = int(round((1 - abs(target - mv) / abs(target - 0)) * 100))
 
+            self.progressBar.setValue(progress)
+
+        self.progressBar.setValue(100)
         logging.info(
             "-------------------- Auto Adjust Saturation Done --------------------"
         )
@@ -536,19 +585,20 @@ class MyGUI(QMainWindow):
                 self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
             )
             light_level, mv_queue, light_level_queue, queue_size = 0, [], [], 3
+
             while True:
                 class_, mv = await self.average_n_classify_helper(
-                    local_file_path, target=target, mode="NOISE"
+                    local_file_path, target=target, mode="NOISE", progressBarOn=False
                 )
                 logging.info(f"Target mV value: {target}")
                 logging.info(f"Class: {class_}, Current MV: {mv}")
                 logging.info(f"Current Light Level: {light_level}")
-                if class_ == "pass":
-                    break
 
                 # append new light_level and mv values to queue and maintain its size
                 light_level_queue.append(light_level)
                 mv_queue.append(mv)
+
+                
 
                 if len(light_level_queue) > queue_size and len(mv_queue) > queue_size:
                     light_level_queue.pop(0)
@@ -582,7 +632,49 @@ class MyGUI(QMainWindow):
                     logging.info("Single stepping down")
                     self.debug_console_controller.tune_down_light()
                     light_level -= 1
+                elif class_ == "pass":
+                    break
+                else:
+                    logging.error("Invalid class")
+                    break
 
+                progress = int(round((1 - abs(target - mv) / abs(target - 0)) * 100))
+                self.progressBar.setValue(progress)
+
+            final_mv_value = mv_queue[-1]
+            logging.info(f"Final MV value: {final_mv_value}")
+            # update lcd
+            if target > self.wb_n1_value:
+                self.lcdNumber_n1plus20.display(final_mv_value)
+            else:
+                self.lcdNumber_n1minus20.display(final_mv_value)
+
+            self.progressBar.setValue(100)
             logging.info(
                 "-------------------- Auto Adjust Noise Done --------------------"
             )
+
+    def clicked_sat_mode(self):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Please select the mode")
+        msgBox.setWindowTitle("Mode Selection")
+
+        # add buttons
+        WLIButton = msgBox.addButton("WLI", QMessageBox.ActionRole)
+        NBIButton = msgBox.addButton("NBI", QMessageBox.ActionRole)
+        RDIButton = msgBox.addButton("RDI", QMessageBox.ActionRole)
+
+        # show message box
+        msgBox.exec_()
+
+        # handle button clicks
+        if msgBox.clickedButton() == WLIButton:
+            logging.info("WLI mode selected")
+            self.debug_console_controller.set_AGC_mode("WLI")
+        elif msgBox.clickedButton() == NBIButton:
+            logging.info("NBI mode selected")
+            self.debug_console_controller.set_AGC_mode("NBI")
+        elif msgBox.clickedButton() == RDIButton:
+            logging.info("RDI mode selected")
+            self.debug_console_controller.set_AGC_mode("RDI")

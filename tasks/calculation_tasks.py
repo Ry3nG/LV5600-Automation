@@ -38,6 +38,7 @@ class CalculationTasks:
             else:
                 raise ValueError(f"Invalid calculation type: {calculation_type}")
 
+            logging.debug(f"mid_cyan_y: {mid_cyan_y}")
             return mid_cyan_y
 
         except ValueError as ve:
@@ -64,11 +65,13 @@ class CalculationTasks:
 
 
             target_high = min(target * (1 + tolerance),CalculationConstants.MAX_SATURATION_MV_VALUE)
+            logging.debug(f"target_high: {target_high}")
             target_low = max(target * (1 - tolerance),0)
+            logging.debug(f"target_low: {target_low}")
 
-            if mv_value > target_high:
+            if mv_value >= target_high:
                 return "high"
-            elif mv_value < target_low:
+            elif mv_value <= target_low:
                 return "low"
             else:
                 return "pass"
@@ -127,4 +130,6 @@ class CalculationTasks:
         current_mv = round(cursor_level * CalculationConstants.CURSOR_TO_MV_FACTOR, 1)
         cursor_level = round(cursor_level, 0)
 
+        logging.debug(f"cursor_level: {cursor_level}")
+        logging.debug(f"current_mv: {current_mv}")
         return cursor_level, current_mv
