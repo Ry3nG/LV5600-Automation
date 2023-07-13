@@ -11,9 +11,8 @@ class FTPConstants:
 
 class CalculationConstants:
     AVERAGE_COUNT = 4
-    TOLERANCE = 0.001 # 1 percent
+    JUMP_THRESHOLD = 0.97 # 97% of the target value
     CURSOR_TO_MV_FACTOR = 0.07
-    TARGET_SATURATION_MV_VALUE = 769
     MAX_SATURATION_MV_VALUE = 770
     
 

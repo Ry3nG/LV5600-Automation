@@ -57,3 +57,16 @@ class AppConfig:
 
     def set_local_file_path(self, local_file_path):
         self.config.set("file", "local_file_path", local_file_path)
+
+    def get_target_tolerance(self):
+        return self.config.getfloat("constants", "target_tolerance")
+
+    def set_target_tolerance(self, target_tolerance):
+        self.config.set("constants", "target_tolerance", str(target_tolerance))
+
+    def get_target_saturation(self):
+        return self.config.getfloat("constants", "target_saturation_mV")
+    
+    def set_target_saturation(self, target_saturation):
+        self.config.set("constants", "target_saturation_mV", str(target_saturation))
+    
