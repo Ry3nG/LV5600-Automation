@@ -2,6 +2,7 @@ from functools import partial, partialmethod
 import logging
 import os
 import numpy as np
+import sys
 from time import sleep
 from PyQt5.QtWidgets import (
     QMainWindow,
@@ -37,9 +38,19 @@ from tasks.calculation_tasks import CalculationTasks
 class MyGUI(QMainWindow):
     def __init__(self):
         super(MyGUI, self).__init__()
-        uic.loadUi("gui/resources/LV5600-Automation-GUI.ui", self)
+
+        #determine if the application is a script file or frozen exe
+        if getattr(sys, 'frozen', False):
+            application_path = sys._MEIPASS # type: ignore
+        else:
+            application_path = os.path.dirname(os.path.abspath(__file__))
+
+        ui_file_path = os.path.join(application_path, "resources", "LV5600-Automation-GUI.ui")
+        uic.loadUi(ui_file_path, self)
+
         self.setWindowTitle("LV5600 Automation")
-        self.setWindowIcon(QIcon("gui/resources/icon.svg"))
+        self.setWindowIcon(QIcon(os.path.join(application_path, "gui", "resources", "icon.svg")))
+
 
         # initiaize the application config
         self.app_config = AppConfig()

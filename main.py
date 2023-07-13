@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from PyQt5.QtWidgets import QApplication
 from qasync import QEventLoop
 from gui.my_gui import MyGUI
@@ -8,6 +9,10 @@ async def main():
     app = QApplication([])
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
+    
+    # Ensure 'logs' directory exists
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
 
     # Clear existing handlers from the root logger
     for handler in logging.root.handlers[:]:

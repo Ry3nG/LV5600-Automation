@@ -1,10 +1,27 @@
 from configparser import ConfigParser
+import logging
+import os
+import sys
 
 
 class AppConfig:
     def __init__(self):
         self.config = ConfigParser()
-        self.config.read("config/config.ini")
+        # determine if the application is a script file or frozen exe
+        if getattr(sys, 'frozen', False):
+            application_path = sys._MEIPASS # type: ignore
+        else:
+            application_path = os.path.dirname(os.path.abspath(__file__))
+
+        config_file_path = os.path.join(application_path, 'config','config.ini')
+        self.config.read(config_file_path)
+        logging.debug("Config file path: " + config_file_path)
+        logging.debug("Config file contents: ")
+        for section in self.config.sections():
+            logging.debug(section)
+            for key in self.config[section]:
+                logging.debug(key + ": " + self.config[section][key])
+        
 
     def get_telnet_address(self):
         return self.config.get("telnet", "host")
@@ -49,8 +66,16 @@ class AppConfig:
         self.config.set("ftp", "password", password)
 
     def save_config_to_file(self):
-        with open("config/config.ini", "w") as config_file:
+        if getattr(sys, 'frozen', False):
+            application_path = sys._MEIPASS # type: ignore
+            config_file_path = os.path.join(application_path, 'config', 'config.ini')
+        else:
+            application_path = os.path.dirname(os.path.abspath(__file__))
+            config_file_path = os.path.join(application_path, 'config.ini')
+        
+        with open(config_file_path, "w") as config_file:
             self.config.write(config_file)
+
 
     def get_local_file_path(self):
         return self.config.get("file", "local_file_path")
