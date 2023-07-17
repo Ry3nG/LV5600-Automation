@@ -52,7 +52,7 @@ class MyGUI(QMainWindow):
 
         self.setWindowTitle("LV5600 Automation")
         self.setWindowIcon(
-            QIcon(os.path.join(application_path, "resources", "icon.svg"))
+            QIcon(os.path.join(application_path, "resources", "icon.ico"))
         )
         self.progressBar.setValue(0)
 
@@ -71,6 +71,7 @@ class MyGUI(QMainWindow):
             self.app_config.get_ftp_username(),
             self.app_config.get_ftp_password(),
         )
+
         self.debug_console_controller = DebugConsoleController()
 
         self.wb_n1_value = -1
@@ -87,7 +88,6 @@ class MyGUI(QMainWindow):
         self.lineEdit_pwd.setEchoMode(QLineEdit.Password)
 
         # TODO : Bind menu bar actions to functions here
-
         self.actionTelnet_Settings = self.findChild(QAction, "actionTelnet_Settings")
         self.actionTelnet_Settings.triggered.connect(self.open_telnet_settings_dialog)  # type: ignore
         self.actionFTP_Settings = self.findChild(QAction, "actionFTP_Settings")
@@ -124,6 +124,8 @@ class MyGUI(QMainWindow):
         self.pushButton_auto_adjust_n1_minus20.clicked.connect(
             partial(self.clicked_auto_adjust_noise, mode="DOWN")
         )
+
+        
 
     def login(self):
         if (
@@ -227,6 +229,11 @@ class MyGUI(QMainWindow):
         except Exception as e:
             logging.error("Error establishing Telnet connection: " + str(e))
             await self.telnet_client.close()
+            message = QMessageBox()
+            message.setWindowTitle("Error")
+            message.setText("Check if the LV5600 is connected!")
+            message.setIcon(QMessageBox.Critical)
+            message.exec()
             return
 
         try:
@@ -236,6 +243,11 @@ class MyGUI(QMainWindow):
             logging.info("Debug console activated")
         except Exception as e:
             logging.error("Error activating debug console: " + str(e))
+            message = QMessageBox()
+            message.setWindowTitle("Error")
+            message.setText("Check if the debug console is connected!")
+            message.setIcon(QMessageBox.Critical)
+            message.exec()
             return
 
         # disable establish connection related components
@@ -261,6 +273,19 @@ class MyGUI(QMainWindow):
         self.lcdNumber_n1plus20.setEnabled(True)
         self.lcdNumber_n1minus20.setEnabled(True)
         self.progressBar.setEnabled(True)
+
+        # check whether local directory exists
+        local_dir = self.app_config.get_local_file_path()
+        if not os.path.exists(local_dir):
+            message = QMessageBox()
+            message.setIcon(QMessageBox.Warning)
+            message.setText(
+                f"Local directory {local_dir} does not exist. Please select a new directory."
+            )
+            message.setWindowTitle("Warning")
+            message.setStandardButtons(QMessageBox.Ok)
+            message.exec_()
+            self.open_local_file_path_dialog()
 
     def display_image_and_title(self, pixmap, title):
         new_size = self.graphicsView.size()
@@ -295,9 +320,7 @@ class MyGUI(QMainWindow):
             await LV5600Tasks.capture_n_send_bmp(
                 self.telnet_client, ftp_client, local_file_path
             )
-            mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
-                    "SAT"
-                )
+            mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan("SAT")
             cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
             # display in graphics view
             pixmap = QPixmap(local_file_path)
@@ -470,7 +493,6 @@ class MyGUI(QMainWindow):
 
             logging.info(f"Class: {class_}, MV: {mv}")
             logging.info(f"Current Light Level: {light_level}")
-            
 
             # append new light_level and mv values to queue and maintain its size
             light_level_queue.append(light_level)
@@ -597,8 +619,6 @@ class MyGUI(QMainWindow):
                 # append new light_level and mv values to queue and maintain its size
                 light_level_queue.append(light_level)
                 mv_queue.append(mv)
-
-                
 
                 if len(light_level_queue) > queue_size and len(mv_queue) > queue_size:
                     light_level_queue.pop(0)

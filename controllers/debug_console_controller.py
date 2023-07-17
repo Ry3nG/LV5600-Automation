@@ -152,8 +152,11 @@ class DebugConsoleController:
         bool: True if the operation was successful, False otherwise.
         """
         # Get a handle to the target application's window
-        self.window = gw.getWindowsWithTitle(self.WINDOW_TITLE)[0]
-
+        try:
+            self.window = gw.getWindowsWithTitle(self.WINDOW_TITLE)[0]
+        except IndexError:
+            self.window = None
+            raise IndexError("Window not found!")
         if self.window is None:
             print("Window not found!")
             return False
