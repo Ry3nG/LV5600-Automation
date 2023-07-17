@@ -1,5 +1,9 @@
+class AppConstants:
+    retry_attempts = 3
+    retry_delay = 0.2
 class TelnetConstants:
     TELNET_END_STRING = b"$"
+    TELNET_CONNECTION_TIMEOUT = 7
 
 class LV5600Constants:
     LINE_NUMBER = 580

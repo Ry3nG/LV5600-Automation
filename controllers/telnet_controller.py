@@ -14,7 +14,7 @@ class TelnetController:
         self.reader = None
         self.writer = None
         self.end_string = TelnetConstants.TELNET_END_STRING
-        self.connection_timeout = 7
+        self.connection_timeout = TelnetConstants.TELNET_CONNECTION_TIMEOUT
         
     async def login(self):
         try:
@@ -25,12 +25,10 @@ class TelnetController:
                 self.writer.write(self.password + "\r\n")
                 await self.reader.readuntil(self.end_string)
             else:
-                logging.error("Error logging in: writer or reader is None")
-                return False
+                raise ConnectionError("Error logging in: writer or reader is None")
         except Exception as e:
-            logging.error(f"Error logging in: {e}")
-            return False
-        return True
+            logging.error(f"Error while logging in: {str(e)}")
+            raise Exception(f"Error while logging in: {str(e)}")
 
     async def connect(self):
         try:
@@ -38,25 +36,24 @@ class TelnetController:
                 telnetlib3.open_connection(self.host, self.port),
                 timeout=self.connection_timeout
             )
-            return True
         except asyncio.TimeoutError:
             logging.error("Telnet connection timed out")
-            return False
+            raise ConnectionError("Telnet connection timed out")
         except Exception as e:
-            logging.error(f"Telnet connection failed: {e}")
-            return False
+            raise Exception(f"Error while connecting to telnet: {str(e)}")
 
     async def send_command(self, command):
         if self.writer is None or self.reader is None:
             logging.error("Error sending command: writer or reader is None")
-            return None
+            raise ConnectionError("Error sending command: writer or reader is None")
 
         response = None
         try:
             self.writer.write(command + "\r\n")
-            response = await self.reader.readuntil(self.end_string)
+            response = await asyncio.wait_for(self.reader.readuntil(self.end_string), timeout=self.connection_timeout)
         except Exception as e:
-            logging.error(f"Error sending command {command}: {e}")
+            logging.error(f"Error while sending command: {str(e)}")
+            raise Exception(f"Error while sending command: {str(e)}")
 
         return response
 
@@ -66,5 +63,7 @@ class TelnetController:
                 self.writer.close()
             else:
                 logging.error("Error closing connection: writer is None")
+                raise ConnectionError("Error closing connection: writer is None")
         except Exception as e:
-            logging.error(f"Error closing connection: {e}")
+            logging.error(f"Error while closing connection: {str(e)}")
+            raise Exception(f"Error while closing connection: {str(e)}")

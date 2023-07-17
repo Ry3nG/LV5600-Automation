@@ -5,7 +5,7 @@ import constants
 class LV5600Tasks:
 
     @staticmethod
-    async def initialize_lv5600(telnet_client):
+    async def initialize_lv5600(telnet_client) -> bool:
         response = None
         try:
             response = await telnet_client.send_command(SYSCommand.system_initialize())
@@ -95,8 +95,10 @@ class LV5600Tasks:
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform cursor unit: " + str(e))
         
+        return True
+        
     @staticmethod
-    async def capture_n_send_bmp(telnet_client,ftp_client,file_path):
+    async def capture_n_send_bmp(telnet_client,ftp_client,file_path) -> bool:
         response = None
         # capture
         try:
@@ -123,6 +125,8 @@ class LV5600Tasks:
         except Exception as e:
             logging.error("Error downloading file from FTP: " + str(e))
             raise Exception("Error downloading file from FTP: " + str(e))
+
+        return True
 
     @staticmethod
     async def recall_preset(telnet_client, preset_number):

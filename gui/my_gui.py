@@ -1,9 +1,11 @@
-from functools import partial, partialmethod
+import asyncio
+from functools import partial
 import logging
 import os
-import numpy as np
 import sys
-from time import sleep
+import numpy as np
+
+
 from PyQt5.QtWidgets import (
     QMainWindow,
     QAction,
@@ -19,7 +21,7 @@ from PyQt5 import uic
 from PyQt5.QtGui import QIcon, QPixmap
 from qasync import asyncSlot
 from PyQt5.QtCore import Qt
-from constants import CalculationConstants, FTPConstants
+from constants import AppConstants, CalculationConstants, FTPConstants
 from controllers.ftp_session_controller import FTPSession
 
 from controllers.telnet_controller import TelnetController
@@ -87,7 +89,6 @@ class MyGUI(QMainWindow):
         # set echo mode to Password for the password fields
         self.lineEdit_pwd.setEchoMode(QLineEdit.Password)
 
-        # TODO : Bind menu bar actions to functions here
         self.actionTelnet_Settings = self.findChild(QAction, "actionTelnet_Settings")
         self.actionTelnet_Settings.triggered.connect(self.open_telnet_settings_dialog)  # type: ignore
         self.actionFTP_Settings = self.findChild(QAction, "actionFTP_Settings")
@@ -102,7 +103,6 @@ class MyGUI(QMainWindow):
             QAction, "actionEdit_Saturation_Target_mV"
         )
         self.actionEdit_Saturation_Target_mV.triggered.connect(self.open_saturation_target_dialog)  # type: ignore
-        # TODO : Bind button actions to functions here
         self.pushButton_login.clicked.connect(self.login)
         self.pushButton_establish_connection.clicked.connect(self.establish_connection)
         self.pushButton_initialize_lv5600.clicked.connect(
@@ -118,14 +118,15 @@ class MyGUI(QMainWindow):
         self.pushButton_auto_wb.clicked.connect(self.clicked_auto_wb)
         self.pushButton_auto_adjust_sat.clicked.connect(self.clicked_auto_adjust_sat)
         self.pushButton_SAT_mode.clicked.connect(self.clicked_sat_mode)
+        self.pushButton_auto_adjust_n1.clicked.connect(
+            partial(self.clicked_auto_adjust_noise, mode="EQUAL")
+        )
         self.pushButton_auto_adjust_n1_plus20.clicked.connect(
             partial(self.clicked_auto_adjust_noise, mode="UP")
         )
         self.pushButton_auto_adjust_n1_minus20.clicked.connect(
             partial(self.clicked_auto_adjust_noise, mode="DOWN")
         )
-
-        
 
     def login(self):
         if (
@@ -213,17 +214,9 @@ class MyGUI(QMainWindow):
             logging.debug("Telnet port: " + str(self.app_config.get_telnet_port()))
             logging.debug("Telnet username: " + self.app_config.get_telnet_username())
             logging.debug("Telnet password: " + self.app_config.get_telnet_password())
-            status = await self.telnet_client.connect()
-            if not status:
-                logging.error("Error establishing Telnet connection")
-                return
+            await self.telnet_client.connect()
             logging.info("Telnet connection established")
-
-            login_status = await self.telnet_client.login()
-            if not login_status:
-                logging.error("Error logging in to Telnet")
-                await self.telnet_client.close()
-                return
+            await self.telnet_client.login()
             logging.info("Logged into Telnet successfully")
 
         except Exception as e:
@@ -261,6 +254,7 @@ class MyGUI(QMainWindow):
         self.pushButton_SAT_mode.setEnabled(True)
         self.pushButton_recall_preset.setEnabled(True)
         self.pushButton_capture_n_send_bmp.setEnabled(True)
+        self.pushButton_auto_adjust_n1.setEnabled(True)
         self.pushButton_auto_adjust_n1_plus20.setEnabled(True)
         self.pushButton_auto_adjust_n1_minus20.setEnabled(True)
         self.textBrowser.setEnabled(True)
@@ -304,29 +298,79 @@ class MyGUI(QMainWindow):
     @asyncSlot()
     async def clicked_initialize_lv5600(self):
         logging.info("-------------------- Initializing LV5600 --------------------")
-        await LV5600Tasks.initialize_lv5600(self.telnet_client)
-        logging.info("-------------------- LV5600 Initialized --------------------")
+        exec_status = False
+
+        try:
+            exec_status = await LV5600Tasks.initialize_lv5600(self.telnet_client)
+        except Exception as e:
+            logging.error("Error initializing LV5600: " + str(e))
+
+            message = QMessageBox()
+            message.setWindowTitle("Error")
+            message.setText(
+                "Error initializing LV5600, retrying telnet connection may help! Click OK to retry."
+            )
+            message.setIcon(QMessageBox.Critical)
+            message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            result = message.exec()
+            if result == QMessageBox.Ok:
+                await self.establish_connection()
+                exec_status = await LV5600Tasks.initialize_lv5600(self.telnet_client)
+            return
+
+        if exec_status:
+            logging.info("-------------------- LV5600 Initialized --------------------")
+
+        if not exec_status:
+            logging.error("Error initializing LV5600")
+            return
 
     @asyncSlot()
     async def clicked_capture_n_send_bmp(self):
-        logging.info(
-            "-------------------- Capturing and sending BMP --------------------"
-        )
+        logging.info("-------------------- Capturing and sending BMP --------------------")
+        exec_status = False
         self.progressBar.setValue(0)
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
         )
-        with FTPSession(self.ftp_client) as ftp_client:
-            await LV5600Tasks.capture_n_send_bmp(
-                self.telnet_client, ftp_client, local_file_path
+
+        try:
+            with FTPSession(self.ftp_client) as ftp_client:
+                exec_status = await LV5600Tasks.capture_n_send_bmp(
+                    self.telnet_client, ftp_client, local_file_path
+                )
+                mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
+                    "SAT"
+                )
+                cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
+                # display in graphics view
+                pixmap = QPixmap(local_file_path)
+                self.display_image_and_title(pixmap, "Current mV: " + str(mv))
+                self.progressBar.setValue(100)
+
+                if exec_status:
+                    self.progressBar.setValue(100)
+                    logging.info("-------------------- BMP captured and sent --------------------")
+        except Exception as e:
+            logging.error("Error capturing and sending BMP: " + str(e))
+
+            message = QMessageBox()
+            message.setWindowTitle("Error")
+            message.setText(
+                "Error capturing and sending BMP, retrying may help! Click OK to retry."
             )
-            mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan("SAT")
-            cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
-            # display in graphics view
-            pixmap = QPixmap(local_file_path)
-            self.display_image_and_title(pixmap, "Current mV: " + str(mv))
-        self.progressBar.setValue(100)
-        logging.info("-------------------- BMP captured and sent --------------------")
+            message.setIcon(QMessageBox.Critical)
+            message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            result = message.exec()
+
+            if result == QMessageBox.Ok:
+                await self.establish_connection()
+                await self.clicked_capture_n_send_bmp()
+            return
+
+        if not exec_status:
+            logging.error("BMP capture and send failed")
+            return
 
     @asyncSlot()
     async def clicked_recall_preset(self):
@@ -334,15 +378,29 @@ class MyGUI(QMainWindow):
             self, "Recall Preset", "Enter Preset Number (1-60):", 1, 1, 60, 1
         )
         if ok:
-            logging.info(
-                f"-------------------- Recalling Preset {preset_number} --------------------"
-            )
-            self.progressBar.setValue(0)
-            await LV5600Tasks.recall_preset(self.telnet_client, preset_number)
-            self.progressBar.setValue(100)
-            logging.info(
-                f"-------------------- Preset {preset_number} recalled --------------------"
-            )
+            logging.info(f"Recalling Preset {preset_number}")
+            try:
+                self.progressBar.setValue(0)
+                await LV5600Tasks.recall_preset(self.telnet_client, preset_number)
+                self.progressBar.setValue(100)
+            except Exception as e:
+                logging.error("Error recalling preset: " + str(e))
+
+                message = QMessageBox()
+                message.setWindowTitle("Error")
+                message.setText(
+                    "Error recalling preset, retrying may help! Click OK to retry."
+                )
+                message.setIcon(QMessageBox.Critical)
+                message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                result = message.exec()
+
+                if result == QMessageBox.Ok:
+                    await self.establish_connection()
+                    await self.clicked_recall_preset()
+                return
+
+            logging.info(f"Preset {preset_number} recalled")
 
     @asyncSlot()
     async def average_n_classify_helper(
@@ -582,11 +640,11 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_auto_adjust_noise(self, mode):
-        if mode not in ["UP", "DOWN"]:
-            logging.warning("Invalid mode. Mode must be either 'UP' or 'DOWN'.")
+        if mode not in ["UP", "DOWN", "EQUAL"]:
+            logging.warning("Invalid mode!")
             message = QMessageBox()
             message.setIcon(QMessageBox.Warning)
-            message.setText("Invalid mode. Mode must be either 'UP' or 'DOWN'.")
+            message.setText("Invalid mode!")
             message.setWindowTitle("Warning")
             message.exec_()
             return
@@ -600,7 +658,14 @@ class MyGUI(QMainWindow):
             return
         else:
             logging.info("-------------------- Auto Adjust Noise --------------------")
-            target = self.wb_n1_value + 20 if mode == "UP" else self.wb_n1_value - 20
+            if mode == "UP":
+                target = self.wb_n1_value + 20
+            elif mode == "DOWN":
+                target = self.wb_n1_value - 20
+            elif mode == "EQUAL":
+                target = self.wb_n1_value
+            else:
+                return
 
             self.debug_console_controller.reset_light_level()
             local_file_path = os.path.join(
@@ -664,10 +729,12 @@ class MyGUI(QMainWindow):
             final_mv_value = mv_queue[-1]
             logging.info(f"Final MV value: {final_mv_value}")
             # update lcd
-            if target > self.wb_n1_value:
+            if mode == "UP":
                 self.lcdNumber_n1plus20.display(final_mv_value)
-            else:
+            elif mode == "DOWN":
                 self.lcdNumber_n1minus20.display(final_mv_value)
+            elif mode == "EQUAL":
+                self.lcdNumber_n1.display(final_mv_value)
 
             self.progressBar.setValue(100)
             logging.info(

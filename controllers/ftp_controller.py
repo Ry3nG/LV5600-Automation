@@ -14,17 +14,18 @@ class FTPController:
             self.ftp.login(self.username,self.password)
             self.ftp.set_pasv(True) # passive mode means the server initiates the data connection
         except Exception as e:
-            logging.error(f"FTP connection failed: {e}")
+            logging.error(f"Error while connecting to FTP: {str(e)}")
+            raise Exception(f"Error while connecting to FTP: {str(e)}")
     
     def get_file(self, remote_file, local_file):
         if not self.ftp:
-            logging.error("FTP connection not established")
-            return
+            raise ConnectionError("FTP connection is not established.")
         try:
             with open(local_file, 'wb') as file:
                 self.ftp.retrbinary(f'RETR {remote_file}', file.write)
         except Exception as e:
-            logging.error(f"Error getting file {remote_file}: {e}")
+            logging.error(f"Error while getting file {remote_file}: {str(e)}")
+            raise Exception(f"Error while getting file {remote_file}: {str(e)}")
     
     def is_connected(self):
         if self.ftp:
@@ -32,7 +33,8 @@ class FTPController:
                 # An empty string will be returned if the connection is alive
                 return self.ftp.voidcmd("NOOP") == ''
             except Exception as e:
-                logging.error(f"Error while checking connection status: {str(e)}")
+                logging.error(f"Error while checking FTP connection: {str(e)}")
+                raise Exception(f"Error while checking FTP connection: {str(e)}")
         return False
     
     def close(self):
@@ -41,7 +43,9 @@ class FTPController:
                 self.ftp.quit()
             except Exception as e:
                 logging.error(f"Error while closing FTP connection: {str(e)}")
+                raise Exception(f"Error while closing FTP connection: {str(e)}")
             finally:
                 self.ftp = None
         else:
-            logging.error("FTP connection is already closed.")
+            logging.error("Error closing FTP connection: FTP connection is not established.")
+            raise ConnectionError("FTP connection is not established.")
