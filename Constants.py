@@ -1,24 +1,24 @@
-class AppConstants:
-    retry_attempts = 3
-    retry_delay = 0.2
 class TelnetConstants:
     TELNET_END_STRING = b"$"
     TELNET_CONNECTION_TIMEOUT = 7
+
 
 class LV5600Constants:
     LINE_NUMBER = 580
     MAX_CURSOR_VALUE = 11000
 
+
 class FTPConstants:
-    FTP_FILE_NAME_BMP = 'cap_bmp.bmp'
-    LOCAL_FILE_NAME_BMP = 'snapshot.bmp'
+    FTP_FILE_NAME_BMP = "cap_bmp.bmp"
+    LOCAL_FILE_NAME_BMP = "snapshot.bmp"
+
 
 class CalculationConstants:
     AVERAGE_COUNT = 4
-    JUMP_THRESHOLD = 0.97 # 97% of the target value
+    JUMP_THRESHOLD = 0.97  # 97% of the target value
     CURSOR_TO_MV_FACTOR = 0.07
     MAX_SATURATION_MV_VALUE = 770
-    
+
 
 class PreprocessingConstants:
     ROI_COORDINATES_Y1 = 93

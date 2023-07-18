@@ -1,4 +1,3 @@
-import asyncio
 from functools import partial
 import logging
 import os
@@ -21,7 +20,7 @@ from PyQt5 import uic
 from PyQt5.QtGui import QIcon, QPixmap
 from qasync import asyncSlot
 from PyQt5.QtCore import Qt
-from constants import AppConstants, CalculationConstants, FTPConstants
+from constants import CalculationConstants, FTPConstants
 from controllers.ftp_session_controller import FTPSession
 
 from controllers.telnet_controller import TelnetController
@@ -328,7 +327,9 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_capture_n_send_bmp(self):
-        logging.info("-------------------- Capturing and sending BMP --------------------")
+        logging.info(
+            "-------------------- Capturing and sending BMP --------------------"
+        )
         exec_status = False
         self.progressBar.setValue(0)
         local_file_path = os.path.join(
@@ -351,7 +352,9 @@ class MyGUI(QMainWindow):
 
                 if exec_status:
                     self.progressBar.setValue(100)
-                    logging.info("-------------------- BMP captured and sent --------------------")
+                    logging.info(
+                        "-------------------- BMP captured and sent --------------------"
+                    )
         except Exception as e:
             logging.error("Error capturing and sending BMP: " + str(e))
 
@@ -561,7 +564,11 @@ class MyGUI(QMainWindow):
                 light_level_queue.pop(0)
                 mv_queue.pop(0)
 
-            if len(set(light_level_queue)) == 2 and len(light_level_queue) > 2 and class_ !='Just Saturated':
+            if (
+                len(set(light_level_queue)) == 2
+                and len(light_level_queue) > 2
+                and class_ != "Just Saturated"
+            ):
                 logging.warning("Oscillation detected. Please adjust manually.")
                 await LV5600Tasks.scale_and_cursor(
                     self.telnet_client,
@@ -599,7 +606,7 @@ class MyGUI(QMainWindow):
                 predicted_light_level = int(
                     round(min(max(predicted_light_level, 0), 255))
                 )  # ensure predicted_light_level is within 0-255, prevent overflow
-                
+
                 # ensure prediced_light_level is smaller than current light level + 20 (prevent overstepping)
                 if predicted_light_level > light_level + 20:
                     predicted_light_level = light_level + 20
@@ -692,7 +699,11 @@ class MyGUI(QMainWindow):
                     light_level_queue.pop(0)
                     mv_queue.pop(0)
 
-                if len(set(light_level_queue)) == 2 and len(light_level_queue) > 2 and class_ != 'pass':
+                if (
+                    len(set(light_level_queue)) == 2
+                    and len(light_level_queue) > 2
+                    and class_ != "pass"
+                ):
                     logging.warning("Oscillation detected. Please adjust manually.")
                     await LV5600Tasks.scale_and_cursor(
                         self.telnet_client,
