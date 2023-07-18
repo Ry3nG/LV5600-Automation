@@ -13,6 +13,7 @@ class FTPController:
             self.ftp = FTP(self.host)
             self.ftp.login(self.username,self.password)
             self.ftp.set_pasv(True) # passive mode means the server initiates the data connection
+            logging.info(f"Connected to FTP server {self.host}")
         except Exception as e:
             logging.error(f"Error while connecting to FTP: {str(e)}")
             raise Exception(f"Error while connecting to FTP: {str(e)}")
@@ -33,8 +34,8 @@ class FTPController:
                 # An empty string will be returned if the connection is alive
                 return self.ftp.voidcmd("NOOP") == ''
             except Exception as e:
-                logging.error(f"Error while checking FTP connection: {str(e)}")
-                raise Exception(f"Error while checking FTP connection: {str(e)}")
+                logging.error(f"FTP connection is not established: {str(e)}")
+                return False
         return False
     
     def close(self):
