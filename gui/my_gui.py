@@ -263,6 +263,7 @@ class MyGUI(QMainWindow):
         self.label_n1.setEnabled(True)
         self.label_n1plus20.setEnabled(True)
         self.label_n1minus20.setEnabled(True)
+        self.label_SAT_mode.setEnabled(True)
         self.lcdNumber_n1.setEnabled(True)
         self.lcdNumber_n1plus20.setEnabled(True)
         self.lcdNumber_n1minus20.setEnabled(True)
@@ -598,9 +599,11 @@ class MyGUI(QMainWindow):
                 predicted_light_level = int(
                     round(min(max(predicted_light_level, 0), 255))
                 )  # ensure predicted_light_level is within 0-255, prevent overflow
+                
+                # ensure prediced_light_level is smaller than current light level + 20 (prevent overstepping)
+                if predicted_light_level > light_level + 20:
+                    predicted_light_level = light_level + 20
 
-                # ensure predicted_light_level is greater than current light level
-                predicted_light_level = max(predicted_light_level, light_level)
                 if predicted_light_level <= light_level:
                     predicted_light_level = light_level + 1
                 # adjust the light level towards the predicted_light_level
@@ -751,6 +754,8 @@ class MyGUI(QMainWindow):
         WLIButton = msgBox.addButton("WLI", QMessageBox.ActionRole)
         NBIButton = msgBox.addButton("NBI", QMessageBox.ActionRole)
         RDIButton = msgBox.addButton("RDI", QMessageBox.ActionRole)
+        OnButton = msgBox.addButton("ON", QMessageBox.ActionRole)
+        OffButton = msgBox.addButton("OFF", QMessageBox.ActionRole)
 
         # show message box
         msgBox.exec_()
@@ -759,9 +764,20 @@ class MyGUI(QMainWindow):
         if msgBox.clickedButton() == WLIButton:
             logging.info("WLI mode selected")
             self.debug_console_controller.set_AGC_mode("WLI")
+            self.label_SAT_mode.setText("WLI")
         elif msgBox.clickedButton() == NBIButton:
             logging.info("NBI mode selected")
             self.debug_console_controller.set_AGC_mode("NBI")
+            self.label_SAT_mode.setText("NBI")
         elif msgBox.clickedButton() == RDIButton:
             logging.info("RDI mode selected")
             self.debug_console_controller.set_AGC_mode("RDI")
+            self.label_SAT_mode.setText("RDI")
+        elif msgBox.clickedButton() == OnButton:
+            logging.info("AGC On mode selected")
+            self.debug_console_controller.set_AGC_mode("ON")
+            self.label_SAT_mode.setText("AGC On")
+        elif msgBox.clickedButton() == OffButton:
+            logging.info("AGC Off mode selected")
+            self.debug_console_controller.set_AGC_mode("OFF")
+            self.label_SAT_mode.setText("AGC Off")
