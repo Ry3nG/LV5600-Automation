@@ -560,7 +560,7 @@ class MyGUI(QMainWindow):
                 light_level_queue.pop(0)
                 mv_queue.pop(0)
 
-            if len(set(light_level_queue)) == 2 and len(light_level_queue) > 2:
+            if len(set(light_level_queue)) == 2 and len(light_level_queue) > 2 and class_ !='Just Saturated':
                 logging.warning("Oscillation detected. Please adjust manually.")
                 await LV5600Tasks.scale_and_cursor(
                     self.telnet_client,
@@ -689,7 +689,7 @@ class MyGUI(QMainWindow):
                     light_level_queue.pop(0)
                     mv_queue.pop(0)
 
-                if len(set(light_level_queue)) == 2 and len(light_level_queue) > 2:
+                if len(set(light_level_queue)) == 2 and len(light_level_queue) > 2 and class_ != 'pass':
                     logging.warning("Oscillation detected. Please adjust manually.")
                     await LV5600Tasks.scale_and_cursor(
                         self.telnet_client,
