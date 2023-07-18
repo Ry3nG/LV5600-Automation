@@ -62,8 +62,11 @@ class TelnetController:
             if self.writer is not None:
                 self.writer.close()
             else:
-                logging.error("Error closing connection: writer is None")
-                raise ConnectionError("Error closing connection: writer is None")
+                logging.warning("Writer is None")
+                
+        except ConnectionError as e:
+            logging.error(f"Error while closing connection: {str(e)}")
+            raise ConnectionError(f"Error while closing connection: {str(e)}")
         except Exception as e:
             logging.error(f"Error while closing connection: {str(e)}")
             raise Exception(f"Error while closing connection: {str(e)}")
