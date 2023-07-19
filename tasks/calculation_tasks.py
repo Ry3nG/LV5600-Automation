@@ -29,7 +29,8 @@ class CalculationTasks:
             cyan_coordinates = np.array(cyan_coordinates)
 
             mid_point_x = int(image.shape[1] / 2)
-            mid_cyan_pixels = np.where(cyan_coordinates[1] == mid_point_x)[0]
+            #mid_cyan_pixels = np.where(cyan_coordinates[1] == mid_point_x)[0]
+            mid_cyan_pixels = np.where((cyan_coordinates[1] >= mid_point_x - 5) & (cyan_coordinates[1] < mid_point_x + 5))[0]
 
             if calculation_type == "min":
                 mid_cyan_y = np.nanmin(cyan_coordinates[0][mid_cyan_pixels])
@@ -64,7 +65,8 @@ class CalculationTasks:
                 raise ValueError("target must be greater than 0")
 
 
-            target_high = min(target * (1 + tolerance),CalculationConstants.MAX_SATURATION_MV_VALUE)
+            #target_high = min(target * (1 + tolerance),CalculationConstants.MAX_SATURATION_MV_VALUE)
+            target_high = target * (1 + tolerance)
             logging.debug(f"target_high: {target_high}")
             target_low = max(target * (1 - tolerance),0)
             logging.debug(f"target_low: {target_low}")
