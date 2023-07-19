@@ -2,6 +2,7 @@ from functools import partial
 import logging
 import os
 import sys
+from time import sleep
 import numpy as np
 
 
@@ -110,13 +111,15 @@ class MyGUI(QMainWindow):
         self.pushButton_capture_n_send_bmp.clicked.connect(
             self.clicked_capture_n_send_bmp
         )
-        self.pushButton_recall_preset.clicked.connect(self.clicked_recall_preset)
+
         self.pushButton_capture_n_classify_sat.clicked.connect(
             self.clicked_capture_n_classify_sat
         )
         self.pushButton_auto_wb.clicked.connect(self.clicked_auto_wb)
         self.pushButton_auto_adjust_sat.clicked.connect(self.clicked_auto_adjust_sat)
         self.pushButton_SAT_mode.clicked.connect(self.clicked_sat_mode)
+        self.pushButton_mask_mode.clicked.connect(self.clicked_mask_mode)
+        self.pushButton_light_setting.clicked.connect(self.clicked_light_setting)
         self.pushButton_auto_adjust_n1.clicked.connect(
             partial(self.clicked_auto_adjust_noise, mode="EQUAL")
         )
@@ -251,7 +254,8 @@ class MyGUI(QMainWindow):
         self.pushButton_capture_n_classify_sat.setEnabled(True)
         self.pushButton_auto_adjust_sat.setEnabled(True)
         self.pushButton_SAT_mode.setEnabled(True)
-        self.pushButton_recall_preset.setEnabled(True)
+        self.pushButton_mask_mode.setEnabled(True)
+        self.pushButton_light_setting.setEnabled(True)
         self.pushButton_capture_n_send_bmp.setEnabled(True)
         self.pushButton_auto_adjust_n1.setEnabled(True)
         self.pushButton_auto_adjust_n1_plus20.setEnabled(True)
@@ -263,6 +267,7 @@ class MyGUI(QMainWindow):
         self.label_n1plus20.setEnabled(True)
         self.label_n1minus20.setEnabled(True)
         self.label_SAT_mode.setEnabled(True)
+        self.label_mask_mode.setEnabled(True)
         self.lcdNumber_n1.setEnabled(True)
         self.lcdNumber_n1plus20.setEnabled(True)
         self.lcdNumber_n1minus20.setEnabled(True)
@@ -375,36 +380,6 @@ class MyGUI(QMainWindow):
         if not exec_status:
             logging.error("BMP capture and send failed")
             return
-
-    @asyncSlot()
-    async def clicked_recall_preset(self):
-        preset_number, ok = QInputDialog.getInt(
-            self, "Recall Preset", "Enter Preset Number (1-60):", 1, 1, 60, 1
-        )
-        if ok:
-            logging.info(f"Recalling Preset {preset_number}")
-            try:
-                self.progressBar.setValue(0)
-                await LV5600Tasks.recall_preset(self.telnet_client, preset_number)
-                self.progressBar.setValue(100)
-            except Exception as e:
-                logging.error("Error recalling preset: " + str(e))
-
-                message = QMessageBox()
-                message.setWindowTitle("Error")
-                message.setText(
-                    "Error recalling preset, retrying may help! Click OK to retry."
-                )
-                message.setIcon(QMessageBox.Critical)
-                message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-                result = message.exec()
-
-                if result == QMessageBox.Ok:
-                    await self.establish_connection()
-                    await self.clicked_recall_preset()
-                return
-
-            logging.info(f"Preset {preset_number} recalled")
 
     @asyncSlot()
     async def average_n_classify_helper(
@@ -759,7 +734,7 @@ class MyGUI(QMainWindow):
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
         msgBox.setText("Please select the mode")
-        msgBox.setWindowTitle("Mode Selection")
+        msgBox.setWindowTitle("AGC Mode Selection")
 
         # add buttons
         WLIButton = msgBox.addButton("WLI", QMessageBox.ActionRole)
@@ -792,3 +767,46 @@ class MyGUI(QMainWindow):
             logging.info("AGC Off mode selected")
             self.debug_console_controller.set_AGC_mode("OFF")
             self.label_SAT_mode.setText("AGC Off")
+        
+        logging.info("-------------------- AGC mode set --------------------")
+
+    def clicked_mask_mode(self):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Please select the mode")
+        msgBox.setWindowTitle("Mask Mode Selection")
+
+        # add buttons
+        OnButton = msgBox.addButton("ON", QMessageBox.ActionRole)
+        OffButton = msgBox.addButton("OFF", QMessageBox.ActionRole)
+        CrossButton = msgBox.addButton("CROSS", QMessageBox.ActionRole)
+
+        # show message box
+        msgBox.exec_()
+        # handle button clicks
+        if msgBox.clickedButton() == OnButton:
+            logging.info("Mask On mode selected")
+            self.debug_console_controller.set_mask_mode("ON")
+            self.label_mask_mode.setText("Mask On")
+        elif msgBox.clickedButton() == OffButton:
+            logging.info("Mask Off mode selected")
+            self.debug_console_controller.set_mask_mode("OFF")
+            self.label_mask_mode.setText("Mask Off")
+        elif msgBox.clickedButton() == CrossButton:
+            logging.info("Mask Cross mode selected")
+            self.debug_console_controller.set_mask_mode("CROSS")
+            self.label_mask_mode.setText("Mask X")
+        
+        sleep(1)
+        logging.info("-------------------- Mask mode set --------------------")
+        
+    def clicked_light_setting(self):
+
+        # prompt user to enter the number (0 to 256)
+        light_level, ok = QInputDialog.getInt(
+            self, "Light Setting", "Enter Light Level", 0, 0, 256, 1
+        )
+        if ok:
+            logging.info(f"Setting light level to {light_level}")
+            self.debug_console_controller.set_light_level(light_level)
+            logging.info("-------------------- Light level set --------------------")
