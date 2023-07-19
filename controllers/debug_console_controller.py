@@ -36,6 +36,12 @@ class DebugConsoleController:
     DELIVERY_AGC_SETTING_Y = 173
     DELIVERY_LIGHT_SETTING_X = 670
     DELIVERY_LIGHT_SETTING_Y = 194
+    MASK_SETTING_X = 635
+    MASK_SETTING_Y = 211
+    DELIVERY_MASK_SETTING_X = 670
+    DELIVERY_MASK_SETTING_Y = 211
+    DELIVERY_INITIAL_SETTING_X = 670
+    DELIVERY_INITIAL_SETTING_Y = 152
 
     def __init__(self):
         """
@@ -215,6 +221,54 @@ class DebugConsoleController:
         self.press_key('enter')
         self.move_and_click(self.DELIVERY_AGC_SETTING_X, self.DELIVERY_AGC_SETTING_Y)
         
+    def set_mask_mode(self, mode):
+        """
+            Set the mask mode to the specified value.
+            Args: CROSS, ON, OFF
 
+            Returns:
+            None
+        """
+        # need to press delivery initial setting first
+        self.move_and_click(self.DELIVERY_INITIAL_SETTING_X, self.DELIVERY_INITIAL_SETTING_Y)
+        self.move_and_click(self.MASK_SETTING_X, self.MASK_SETTING_Y)
+        self.press_key('home')
+        num_of_press = 0
+        if mode == 'CROSS':
+            num_of_press = 0
+        elif mode == 'OFF':
+            num_of_press = 1
+        elif mode == 'ON':
+            num_of_press = 2
+        else:
+            raise ValueError('Invalid Mask mode!')
+
+        for i in range(num_of_press):
+            self.press_key('down')
+        self.press_key('enter')
+        self.move_and_click(self.DELIVERY_MASK_SETTING_X, self.DELIVERY_MASK_SETTING_Y)
+
+    def set_light_level(self, target):
+
+        # the target range is 0 to 256
+        if target > 256:
+            raise ValueError('Target light level cannot be greater than 256!')
+        elif target < 0:
+            raise ValueError('Target light level cannot be less than 0!')
+
+        # set the light level, start from the nearest end (home or end represents 0 and 256)
+        self.move_and_click(self.LIGHT_SETTING_X, self.LIGHT_SETTING_Y)
+        if target < 128:
+            self.press_key('home')
+            for i in range(5):
+                self.press_key('down') # to skip the initial setting
+            for i in range(target):
+                self.press_key('down')
+        else:
+            self.press_key('end')
+            for i in range(256 - target):
+                self.press_key('up')
+        self.press_key('enter')
+        self.move_and_click(self.DELIVERY_LIGHT_SETTING_X, self.DELIVERY_LIGHT_SETTING_Y)
 
         
