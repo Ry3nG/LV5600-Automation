@@ -134,7 +134,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Auto White Balance</string>
+     <string>Capture N1 Value</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_capture_n_classify_sat">
@@ -166,7 +166,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Auto adjust lighting for SAT</string>
+     <string>Set SAT Waveform</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_mask_mode">
@@ -213,6 +213,11 @@
       <height>171</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
    </widget>
    <widget class="QPushButton" name="pushButton_establish_connection">
     <property name="enabled">
@@ -243,7 +248,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Auto adjust to n1+20mV</string>
+     <string>Set WF to n1+20mV level</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_graphics">
@@ -293,7 +298,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Auto adjust to n1-20mV</string>
+     <string>Set WF to n1-20mV level</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_SAT_mode">
@@ -485,7 +490,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Auto adjust to n1</string>
+     <string>Set WF to n1 level</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_SAT_mode">
@@ -596,7 +601,7 @@
      <x>0</x>
      <y>0</y>
      <width>1132</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">

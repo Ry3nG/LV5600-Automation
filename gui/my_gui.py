@@ -553,7 +553,10 @@ class MyGUI(QMainWindow):
                 while True:
                     message = QMessageBox()
                     message.setIcon(QMessageBox.Warning)
-                    message.setText("Oscillation detected. Please adjust manually.")
+                    if class_ == "Under Saturated":
+                        message.setText("Waveform is under saturated. Move the Scope Digital-End nearer to Chart Surface")
+                    elif class_ == "Over Saturated":
+                        message.setText("Waveform is over saturated. Move the Scope Digital-End further from Chart Surface")
                     message.setWindowTitle("Warning")
                     message.setInformativeText("Press OK to continue")
                     message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
@@ -561,6 +564,9 @@ class MyGUI(QMainWindow):
                     ret = message.exec_()
                     if ret == QMessageBox.Ok:
                         break
+                    if ret == QMessageBox.Cancel:
+                        logging.info("User cancelled, go back to main menu")
+                        return
                 continue
 
             # if we have enough data points, perform linear regression
@@ -688,7 +694,10 @@ class MyGUI(QMainWindow):
                     while True:
                         message = QMessageBox()
                         message.setIcon(QMessageBox.Warning)
-                        message.setText("Oscillation detected. Please adjust manually.")
+                        if class_ == "low":
+                            message.setText("Waveform under target value. Move the Scope Digital-End nearer to Chart Surface")
+                        elif class_ == "high":
+                            message.setText("Waveform over target value. Move the Scope Digital-End further from Chart Surface")
                         message.setWindowTitle("Warning")
                         message.setInformativeText("Press OK to continue")
                         message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
@@ -696,6 +705,9 @@ class MyGUI(QMainWindow):
                         ret = message.exec_()
                         if ret == QMessageBox.Ok:
                             break
+                        if ret == QMessageBox.Cancel:
+                            logging.info("User cancelled, go back to main menu")
+                            return
                     continue
 
                 if class_ == "low":
