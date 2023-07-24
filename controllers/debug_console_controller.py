@@ -1,6 +1,7 @@
 """
 This module provides a class DebugConsoleController that can be used to control the debug console . The class provides methods to move the cursor to specific coordinates, press keys, and adjust the light setting of the console. The module requires the pygetwindow and pyautogui libraries to be installed.
 """
+import threading
 import pygetwindow as gw
 import pyautogui
 import time
@@ -249,26 +250,50 @@ class DebugConsoleController:
         self.move_and_click(self.DELIVERY_MASK_SETTING_X, self.DELIVERY_MASK_SETTING_Y)
 
     def set_light_level(self, target):
+        """
+        Sets the light level to the specified target value.
 
-        # the target range is 0 to 256
-        if target > 256:
-            raise ValueError('Target light level cannot be greater than 256!')
-        elif target < 0:
-            raise ValueError('Target light level cannot be less than 0!')
+        Args:
+        target (int): The target light level to set. Must be between 0 and 256.
 
-        # set the light level, start from the nearest end (home or end represents 0 and 256)
-        self.move_and_click(self.LIGHT_SETTING_X, self.LIGHT_SETTING_Y)
-        if target < 128:
-            self.press_key('home')
-            for i in range(5):
-                self.press_key('down') # to skip the initial setting
-            for i in range(target):
-                self.press_key('down')
-        else:
-            self.press_key('end')
-            for i in range(256 - target):
-                self.press_key('up')
-        self.press_key('enter')
-        self.move_and_click(self.DELIVERY_LIGHT_SETTING_X, self.DELIVERY_LIGHT_SETTING_Y)
+        Returns:
+        None
 
+        Raises:
+        ValueError: If the target value is less than 0 or greater than 256.
+        """
+        def set_light_level(self, target):
+
+            # the target range is 0 to 256
+            if target > 256:
+                raise ValueError('Target light level cannot be greater than 256!')
+            elif target < 0:
+                raise ValueError('Target light level cannot be less than 0!')
+
+            # set the light level, start from the nearest end (home or end represents 0 and 256)
+            self.move_and_click(self.LIGHT_SETTING_X, self.LIGHT_SETTING_Y)
+            if target < 128:
+                self.press_key('home')
+                for i in range(5):
+                    self.press_key('down') # to skip the initial setting
+                for i in range(target):
+                    self.press_key('down')
+            else:
+                self.press_key('end')
+                for i in range(256 - target):
+                    self.press_key('up')
+            self.press_key('enter')
+            self.move_and_click(self.DELIVERY_LIGHT_SETTING_X, self.DELIVERY_LIGHT_SETTING_Y)
+
+    def stop_tasks(self):
+        if self.window:
+            pyautogui.press('esc')
+            time.sleep(1)
         
+        threading.Thread(target=self._stop_threads).start()
+    
+    def _stop_threads(self):
+        self._stop_flag = True
+        for t in threading.enumerate():
+            if t is not threading.current_thread():
+                t.join()
