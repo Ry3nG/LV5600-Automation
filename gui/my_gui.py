@@ -54,7 +54,7 @@ class MyGUI(QMainWindow):
         # Apply stylesheet
         self.setStyleSheet("""
             QWidget{
-                font-size: 16px;
+                font-size: 10px;
                 }
             QPushButton{
                 background-color: #b1b1b1;
