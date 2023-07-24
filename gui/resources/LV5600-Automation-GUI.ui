@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1132</width>
-    <height>738</height>
+    <height>726</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -210,7 +210,7 @@
       <x>20</x>
       <y>530</y>
       <width>1091</width>
-      <height>171</height>
+      <height>151</height>
      </rect>
     </property>
     <property name="font">
@@ -270,19 +270,6 @@
     </property>
     <property name="text">
      <string>Image Display</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_4">
-    <property name="geometry">
-     <rect>
-      <x>1010</x>
-      <y>700</y>
-      <width>101</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Olympus OSP 2023</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_auto_adjust_n1_minus20">

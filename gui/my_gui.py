@@ -52,7 +52,7 @@ class MyGUI(QMainWindow):
         )
         uic.loadUi(ui_file_path, self)
 
-        self.setWindowTitle("LV5600 Automation")
+        self.setWindowTitle("LV5600-OCB-Automation")
         self.setWindowIcon(
             QIcon(os.path.join(application_path, "resources", "icon.ico"))
         )
