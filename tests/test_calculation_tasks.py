@@ -3,7 +3,7 @@ import numpy as np
 from unittest import mock
 
 from tasks.calculation_tasks import CalculationTasks
-from constants import PreprocessingConstants, LV5600Constants
+from Constants import PreprocessingConstants, LV5600Constants
 
 class TestCalculationTasks(unittest.TestCase):
     def setUp(self):

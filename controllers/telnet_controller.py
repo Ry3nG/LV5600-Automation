@@ -1,7 +1,7 @@
 import asyncio
 from typing import Optional
 import telnetlib3
-from constants import TelnetConstants
+from Constants import TelnetConstants
 import logging
 
 class TelnetController:

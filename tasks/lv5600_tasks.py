@@ -1,6 +1,6 @@
 from commands.command_utils import CaptureCommand, InputCommand, PresetCommand,SYSCommand,WFMCommand
 import logging
-import constants
+import Constants
 
 class LV5600Tasks:
 
@@ -24,7 +24,7 @@ class LV5600Tasks:
             raise Exception("Error enabling waveform line: " + str(e))
 
         try:
-            response = await telnet_client.send_command(WFMCommand.wfm_line_number(constants.LV5600Constants.LINE_NUMBER))
+            response = await telnet_client.send_command(WFMCommand.wfm_line_number(Constants.LV5600Constants.LINE_NUMBER))
             logging.debug("The response is " + str(response))
         except Exception as e:
             logging.error("Error setting waveform line number: " + str(e))
@@ -120,7 +120,7 @@ class LV5600Tasks:
 
         # send
         try:
-            ftp_client.get_file(constants.FTPConstants.FTP_FILE_NAME_BMP,file_path)
+            ftp_client.get_file(Constants.FTPConstants.FTP_FILE_NAME_BMP,file_path)
             logging.debug("File downloaded from FTP")
         except Exception as e:
             logging.error("Error downloading file from FTP: " + str(e))

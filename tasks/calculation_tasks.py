@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 import logging
-from constants import (
+from Constants import (
     CalculationConstants,
     FTPConstants,
     PreprocessingConstants,

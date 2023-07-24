@@ -21,7 +21,7 @@ from PyQt5 import uic
 from PyQt5.QtGui import QIcon, QPixmap
 from qasync import asyncSlot
 from PyQt5.QtCore import Qt
-from constants import CalculationConstants, FTPConstants
+from Constants import CalculationConstants, FTPConstants
 from controllers.ftp_session_controller import FTPSession
 
 from controllers.telnet_controller import TelnetController
