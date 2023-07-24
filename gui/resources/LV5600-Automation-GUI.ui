@@ -722,6 +722,7 @@
     <addaction name="actionLocal_File_Path"/>
     <addaction name="actionEdit_target_tolerance"/>
     <addaction name="actionEdit_Saturation_Target_mV"/>
+    <addaction name="actionEdit_Oversaturate_Threshold"/>
    </widget>
    <addaction name="menuSettings"/>
   </widget>
@@ -764,6 +765,14 @@
    </property>
    <property name="text">
     <string>Edit Saturation Target mV</string>
+   </property>
+  </action>
+  <action name="actionEdit_Oversaturate_Threshold">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit Oversaturate Threshold</string>
    </property>
   </action>
  </widget>

@@ -103,6 +103,7 @@ class MyGUI(QMainWindow):
             QAction, "actionEdit_Saturation_Target_mV"
         )
         self.actionEdit_Saturation_Target_mV.triggered.connect(self.open_saturation_target_dialog)  # type: ignore
+        self.actionEdit_Oversaturate_Threshold.triggered.connect(self.open_oversaturate_threshold_dialog)  # type: ignore
         self.pushButton_login.clicked.connect(self.login)
         self.pushButton_establish_connection.clicked.connect(self.establish_connection)
         self.pushButton_initialize_lv5600.clicked.connect(
@@ -148,6 +149,7 @@ class MyGUI(QMainWindow):
             self.actionLocal_File_Path.setEnabled(True)  # type: ignore
             self.actionEdit_target_tolerance.setEnabled(True)  # type: ignore
             self.actionEdit_Saturation_Target_mV.setEnabled(True)  # type: ignore
+            self.actionEdit_Oversaturate_Threshold.setEnabled(True) # type: ignore
         else:
             message = QMessageBox()
             message.setWindowTitle("Error")
@@ -207,6 +209,16 @@ class MyGUI(QMainWindow):
         )
         if ok:
             self.app_config.set_target_saturation(saturation_target)
+            self.app_config.save_config_to_file()
+
+    def open_oversaturate_threshold_dialog(self):
+        description = "This is the number of pixels to check whether the image is flat or not, determine its saturation status."
+        QMessageBox.information(self, "Oversaturated Threshold", description)
+        oversaturated_threshold, ok = QInputDialog.getDouble(
+            self, "Oversaturated Threshold", "Enter Oversaturated Threshold", 50.0, 0.0, 100.0, 1
+        )
+        if ok:
+            self.app_config.set_flatness_check_threshold(oversaturated_threshold)
             self.app_config.save_config_to_file()
 
     @asyncSlot()
@@ -348,7 +360,7 @@ class MyGUI(QMainWindow):
                 exec_status = await LV5600Tasks.capture_n_send_bmp(
                     self.telnet_client, ftp_client, local_file_path
                 )
-                mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
+                mid_cyan_y_value,flatness = await CalculationTasks.preprocess_and_get_mid_cyan(
                     mode
                 )
                 cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
@@ -400,6 +412,7 @@ class MyGUI(QMainWindow):
 
             # capture multiple images and preprocess them to get the mean mid_cyan_y_value
             mid_cyan_y_values = []
+            flatness = False
             self.progressBar.setValue(0) if progressBarOn else None
             for i in range(CalculationConstants.AVERAGE_COUNT):
                 logging.info(f"Processing image {i+1}")
@@ -408,7 +421,7 @@ class MyGUI(QMainWindow):
                 )
                 pixmap = QPixmap(local_file_path)
                 self.display_image_and_title(pixmap, "Processing image " + str(i + 1))
-                mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
+                mid_cyan_y_value,flatness = await CalculationTasks.preprocess_and_get_mid_cyan(
                     mode
                 )
                 mid_cyan_y_values.append(mid_cyan_y_value)
@@ -428,12 +441,13 @@ class MyGUI(QMainWindow):
             tolerance = self.app_config.get_target_tolerance()
             class_ = CalculationTasks.classify_mv_level(mv, target, tolerance)
 
+
             if mode == "SAT":
-                if class_ == "pass":
+                if class_ == "pass" and flatness == False:
                     class_ = "Just Saturated"
                 elif class_ == "low":
                     class_ = "Under Saturated"
-                elif class_ == "high":
+                elif class_ == "high" or flatness == True:
                     class_ = "Over Saturated"
 
             # turn on scale and cursor
@@ -486,7 +500,7 @@ class MyGUI(QMainWindow):
                 pixmap = QPixmap(local_file_path)
                 self.display_image_and_title(pixmap, "Processing image " + str(i + 1))
                 # preprocess the image
-                mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
+                mid_cyan_y_value,flatness = await CalculationTasks.preprocess_and_get_mid_cyan(
                     "WB"
                 )
                 mid_cyan_y_values.append(mid_cyan_y_value)

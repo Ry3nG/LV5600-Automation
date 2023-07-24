@@ -95,4 +95,9 @@ class AppConfig:
     
     def set_target_saturation(self, target_saturation):
         self.config.set("constants", "target_saturation_mV", str(target_saturation))
+
+    def set_flatness_check_threshold(self, flatness_check_threshold):
+        self.config.set("constants", "flatness_check_threshold", str(flatness_check_threshold))
     
+    def get_flatness_check_threshold(self):
+        return self.config.getfloat("constants", "flatness_check_threshold")
