@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import (
 )
 
 from PyQt5 import uic
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon, QPixmap, QFont
 from qasync import asyncSlot
 from PyQt5.QtCore import Qt
 from Constants import CalculationConstants, FTPConstants
@@ -51,10 +51,12 @@ class MyGUI(QMainWindow):
             application_path, "resources", "LV5600-Automation-GUI.ui"
         )
         uic.loadUi(ui_file_path, self)
+
         # Apply stylesheet
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QWidget {
-                font-size: 16px;
+                font-size: 10px;
             }
             QPushButton {
                 background-color: #b1b1b1;
@@ -64,7 +66,14 @@ class MyGUI(QMainWindow):
                 background-color: #d3d3d3;
                 color: #888;
             }
-            """)
+            QLabel#label_graphics {
+                font-size: 24px;
+            }
+            QObject#textBrowser {
+                font-size: 12px;
+            }
+            """
+        )
 
         self.setWindowTitle("LV5600-OCB-Automation")
         self.setWindowIcon(
@@ -163,7 +172,7 @@ class MyGUI(QMainWindow):
             self.actionLocal_File_Path.setEnabled(True)  # type: ignore
             self.actionEdit_target_tolerance.setEnabled(True)  # type: ignore
             self.actionEdit_Saturation_Target_mV.setEnabled(True)  # type: ignore
-            self.actionEdit_Oversaturate_Threshold.setEnabled(True) # type: ignore
+            self.actionEdit_Oversaturate_Threshold.setEnabled(True)  # type: ignore
         else:
             message = QMessageBox()
             message.setWindowTitle("Error")
@@ -229,7 +238,13 @@ class MyGUI(QMainWindow):
         description = "This is the number of pixels to check whether the image is flat or not, determine its saturation status."
         QMessageBox.information(self, "Oversaturated Threshold", description)
         oversaturated_threshold, ok = QInputDialog.getDouble(
-            self, "Oversaturated Threshold", "Enter Oversaturated Threshold", 20.0, 10.0, 100.0, 1
+            self,
+            "Oversaturated Threshold",
+            "Enter Oversaturated Threshold",
+            20.0,
+            10.0,
+            100.0,
+            1,
         )
         if ok:
             self.app_config.set_flatness_check_threshold(oversaturated_threshold)
@@ -359,7 +374,7 @@ class MyGUI(QMainWindow):
             return
 
     @asyncSlot()
-    async def clicked_capture_n_send_bmp(self,mode='SAT',message = None):
+    async def clicked_capture_n_send_bmp(self, mode="SAT", message=None):
         logging.info(
             "-------------------- Capturing and sending BMP --------------------"
         )
@@ -374,9 +389,10 @@ class MyGUI(QMainWindow):
                 exec_status = await LV5600Tasks.capture_n_send_bmp(
                     self.telnet_client, ftp_client, local_file_path
                 )
-                mid_cyan_y_value,flatness = await CalculationTasks.preprocess_and_get_mid_cyan(
-                    mode
-                )
+                (
+                    mid_cyan_y_value,
+                    flatness,
+                ) = await CalculationTasks.preprocess_and_get_mid_cyan(mode)
                 cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
                 # display in graphics view
                 pixmap = QPixmap(local_file_path)
@@ -435,9 +451,10 @@ class MyGUI(QMainWindow):
                 )
                 pixmap = QPixmap(local_file_path)
                 self.display_image_and_title(pixmap, "Processing image " + str(i + 1))
-                mid_cyan_y_value,flatness = await CalculationTasks.preprocess_and_get_mid_cyan(
-                    mode
-                )
+                (
+                    mid_cyan_y_value,
+                    flatness,
+                ) = await CalculationTasks.preprocess_and_get_mid_cyan(mode)
                 mid_cyan_y_values.append(mid_cyan_y_value)
                 self.progressBar.setValue(
                     int((i + 1) * 100 / CalculationConstants.AVERAGE_COUNT)
@@ -455,7 +472,6 @@ class MyGUI(QMainWindow):
             tolerance = self.app_config.get_target_tolerance()
             class_ = CalculationTasks.classify_mv_level(mv, target, tolerance)
 
-
             if mode == "SAT":
                 if class_ == "pass" and flatness == False:
                     class_ = "Just Saturated"
@@ -470,7 +486,7 @@ class MyGUI(QMainWindow):
             return class_, mv
 
     @asyncSlot()
-    async def clicked_capture_n_classify(self,mode='SAT',message = None):
+    async def clicked_capture_n_classify(self, mode="SAT", message=None):
         logging.info("Capturing and classifying SAT")
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
@@ -485,9 +501,9 @@ class MyGUI(QMainWindow):
 
         # display in graphics view
         pixmap = QPixmap(local_file_path)
-        if mode == 'SAT':
+        if mode == "SAT":
             self.display_image_and_title(pixmap, f"SAT: {class_}")
-        elif mode == 'NOISE':
+        elif mode == "NOISE":
             self.display_image_and_title(pixmap, f"Current mV: {mv}")
         else:
             self.display_image_and_title(pixmap, message)
@@ -514,9 +530,10 @@ class MyGUI(QMainWindow):
                 pixmap = QPixmap(local_file_path)
                 self.display_image_and_title(pixmap, "Processing image " + str(i + 1))
                 # preprocess the image
-                mid_cyan_y_value,flatness = await CalculationTasks.preprocess_and_get_mid_cyan(
-                    "WB"
-                )
+                (
+                    mid_cyan_y_value,
+                    flatness,
+                ) = await CalculationTasks.preprocess_and_get_mid_cyan("WB")
                 mid_cyan_y_values.append(mid_cyan_y_value)
                 self.progressBar.setValue(
                     int((i + 1) * 100 / CalculationConstants.AVERAGE_COUNT)
@@ -594,9 +611,13 @@ class MyGUI(QMainWindow):
                     message = QMessageBox()
                     message.setIcon(QMessageBox.Warning)
                     if class_ == "Under Saturated":
-                        message.setText("Waveform is under saturated. Move the Scope Digital-End nearer to Chart Surface")
+                        message.setText(
+                            "Waveform is under saturated. Move the Scope Digital-End nearer to Chart Surface"
+                        )
                     elif class_ == "Over Saturated":
-                        message.setText("Waveform is over saturated. Move the Scope Digital-End further from Chart Surface")
+                        message.setText(
+                            "Waveform is over saturated. Move the Scope Digital-End further from Chart Surface"
+                        )
                     message.setWindowTitle("Warning")
                     message.setInformativeText("Press OK to continue")
                     message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
@@ -665,7 +686,7 @@ class MyGUI(QMainWindow):
             self.progressBar.setValue(progress)
 
         self.progressBar.setValue(100)
-        await self.clicked_capture_n_send_bmp(mode='SAT',message = f"Final mV: {mv}")
+        await self.clicked_capture_n_send_bmp(mode="SAT", message=f"Final mV: {mv}")
         logging.info(
             "-------------------- Auto Adjust Saturation Done --------------------"
         )
@@ -738,9 +759,13 @@ class MyGUI(QMainWindow):
                         message = QMessageBox()
                         message.setIcon(QMessageBox.Warning)
                         if class_ == "low":
-                            message.setText("Waveform under target value. Move the Scope Digital-End nearer to Chart Surface")
+                            message.setText(
+                                "Waveform under target value. Move the Scope Digital-End nearer to Chart Surface"
+                            )
                         elif class_ == "high":
-                            message.setText("Waveform over target value. Move the Scope Digital-End further from Chart Surface")
+                            message.setText(
+                                "Waveform over target value. Move the Scope Digital-End further from Chart Surface"
+                            )
                         message.setWindowTitle("Warning")
                         message.setInformativeText("Press OK to continue")
                         message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
@@ -781,7 +806,9 @@ class MyGUI(QMainWindow):
                 self.lcdNumber_n1.display(final_mv_value)
 
             self.progressBar.setValue(100)
-            await self.clicked_capture_n_send_bmp(mode = "NOISE", message = f"Current mV: {final_mv_value}")
+            await self.clicked_capture_n_send_bmp(
+                mode="NOISE", message=f"Current mV: {final_mv_value}"
+            )
             logging.info(
                 "-------------------- Auto Adjust Noise Done --------------------"
             )
@@ -823,7 +850,7 @@ class MyGUI(QMainWindow):
             logging.info("AGC Off mode selected")
             self.debug_console_controller.set_AGC_mode("OFF")
             self.label_SAT_mode.setText("AGC Off")
-        
+
         logging.info("-------------------- AGC mode set --------------------")
 
     def clicked_mask_mode(self):
@@ -852,12 +879,11 @@ class MyGUI(QMainWindow):
             logging.info("Mask Cross mode selected")
             self.debug_console_controller.set_mask_mode("CROSS")
             self.label_mask_mode.setText("Mask X")
-        
+
         sleep(1)
         logging.info("-------------------- Mask mode set --------------------")
-        
-    def clicked_light_setting(self):
 
+    def clicked_light_setting(self):
         # prompt user to enter the number (0 to 256)
         light_level, ok = QInputDialog.getInt(
             self, "Light Setting", "Enter Light Level", 0, 0, 256, 1
@@ -866,12 +892,12 @@ class MyGUI(QMainWindow):
             logging.info(f"Setting light level to {light_level}")
             self.debug_console_controller.set_light_level(light_level)
             logging.info("-------------------- Light level set --------------------")
-    
+
     @asyncSlot()
     async def clicked_terminate(self):
         logging.warning("You have clicked the terminate button")
         # stop every task that is currently running, go back to when the app launched
-        
+
         await self.telnet_client.close()
         try:
             self.ftp_client.close()
@@ -922,4 +948,3 @@ class MyGUI(QMainWindow):
         self.wb_n1_value = -1
 
         logging.info("-------------------- Terminated --------------------")
-
