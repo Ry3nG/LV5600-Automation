@@ -51,6 +51,16 @@ class MyGUI(QMainWindow):
             application_path, "resources", "LV5600-Automation-GUI.ui"
         )
         uic.loadUi(ui_file_path, self)
+        # Apply stylesheet
+        self.setStyleSheet("""
+            QWidget{
+                font-size: 8px;
+                }
+            QPushButton{
+                background-color: #b1b1b1;
+                color: #333;
+                }
+            """)
 
         self.setWindowTitle("LV5600-OCB-Automation")
         self.setWindowIcon(
