@@ -215,7 +215,7 @@ class MyGUI(QMainWindow):
         description = "This is the number of pixels to check whether the image is flat or not, determine its saturation status."
         QMessageBox.information(self, "Oversaturated Threshold", description)
         oversaturated_threshold, ok = QInputDialog.getDouble(
-            self, "Oversaturated Threshold", "Enter Oversaturated Threshold", 50.0, 0.0, 100.0, 1
+            self, "Oversaturated Threshold", "Enter Oversaturated Threshold", 20.0, 10.0, 100.0, 1
         )
         if ok:
             self.app_config.set_flatness_check_threshold(oversaturated_threshold)
