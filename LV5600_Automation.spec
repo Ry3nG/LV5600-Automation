@@ -3,7 +3,7 @@
 block_cipher = None
 
 a = Analysis(['main.py'],
-             pathex=['E:\M15\Leader LV5600 PoC\Lv5600-Automation'],
+             pathex=['.'],
              binaries=[],
              datas=[('gui/resources/LV5600-Automation-GUI.ui', 'resources'),
                     ('gui/resources/icon.ico', 'resources'),
