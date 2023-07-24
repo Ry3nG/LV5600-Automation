@@ -504,7 +504,7 @@
      <enum>Qt::LeftToRight</enum>
     </property>
     <property name="text">
-     <string>WLI</string>
+     <string>Unset</string>
     </property>
     <property name="textFormat">
      <enum>Qt::AutoText</enum>
@@ -553,7 +553,7 @@
      <enum>Qt::LeftToRight</enum>
     </property>
     <property name="text">
-     <string>Mask On</string>
+     <string>Unset</string>
     </property>
     <property name="textFormat">
      <enum>Qt::AutoText</enum>
