@@ -24,7 +24,7 @@ jobs:
 
     - name: Run PyInstaller
       run: |
-        pyinstaller LV5600 Automation.spec
+        pyinstaller LV5600_Automation.spec
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
