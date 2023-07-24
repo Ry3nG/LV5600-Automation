@@ -113,7 +113,7 @@ class MyGUI(QMainWindow):
         )
 
         self.pushButton_capture_n_classify_sat.clicked.connect(
-            self.clicked_capture_n_classify_sat
+            self.clicked_capture_n_classify
         )
         self.pushButton_auto_wb.clicked.connect(self.clicked_auto_wb)
         self.pushButton_auto_adjust_sat.clicked.connect(self.clicked_auto_adjust_sat)
@@ -129,6 +129,7 @@ class MyGUI(QMainWindow):
         self.pushButton_auto_adjust_n1_minus20.clicked.connect(
             partial(self.clicked_auto_adjust_noise, mode="DOWN")
         )
+        self.pushButton_terminate.clicked.connect(self.clicked_terminate)
 
     def login(self):
         if (
@@ -260,6 +261,7 @@ class MyGUI(QMainWindow):
         self.pushButton_auto_adjust_n1.setEnabled(True)
         self.pushButton_auto_adjust_n1_plus20.setEnabled(True)
         self.pushButton_auto_adjust_n1_minus20.setEnabled(True)
+        self.pushButton_terminate.setEnabled(True)
         self.textBrowser.setEnabled(True)
         self.graphicsView.setEnabled(True)
         self.label_graphics.setEnabled(True)
@@ -331,7 +333,7 @@ class MyGUI(QMainWindow):
             return
 
     @asyncSlot()
-    async def clicked_capture_n_send_bmp(self):
+    async def clicked_capture_n_send_bmp(self,mode='SAT',message = None):
         logging.info(
             "-------------------- Capturing and sending BMP --------------------"
         )
@@ -347,12 +349,15 @@ class MyGUI(QMainWindow):
                     self.telnet_client, ftp_client, local_file_path
                 )
                 mid_cyan_y_value = await CalculationTasks.preprocess_and_get_mid_cyan(
-                    "SAT"
+                    mode
                 )
                 cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
                 # display in graphics view
                 pixmap = QPixmap(local_file_path)
-                self.display_image_and_title(pixmap, "Current mV: " + str(mv))
+                if message == None:
+                    self.display_image_and_title(pixmap, "Current mV: " + str(mv))
+                else:
+                    self.display_image_and_title(pixmap, message)
                 self.progressBar.setValue(100)
 
                 if exec_status:
@@ -437,7 +442,7 @@ class MyGUI(QMainWindow):
             return class_, mv
 
     @asyncSlot()
-    async def clicked_capture_n_classify_sat(self):
+    async def clicked_capture_n_classify(self,mode='SAT',message = None):
         logging.info("Capturing and classifying SAT")
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
@@ -452,7 +457,12 @@ class MyGUI(QMainWindow):
 
         # display in graphics view
         pixmap = QPixmap(local_file_path)
-        self.display_image_and_title(pixmap, f"SAT: {class_}")
+        if mode == 'SAT':
+            self.display_image_and_title(pixmap, f"SAT: {class_}")
+        elif mode == 'NOISE':
+            self.display_image_and_title(pixmap, f"Current mV: {mv}")
+        else:
+            self.display_image_and_title(pixmap, message)
         logging.info("SAT captured and classified")
 
     @asyncSlot()
@@ -544,6 +554,8 @@ class MyGUI(QMainWindow):
                 and len(light_level_queue) > 2
                 and class_ != "Just Saturated"
             ):
+                self.debug_console_controller.tune_up_light()
+                light_level += 1
                 logging.warning("Oscillation detected. Please adjust manually.")
                 await LV5600Tasks.scale_and_cursor(
                     self.telnet_client,
@@ -625,6 +637,7 @@ class MyGUI(QMainWindow):
             self.progressBar.setValue(progress)
 
         self.progressBar.setValue(100)
+        await self.clicked_capture_n_send_bmp(mode='SAT',message = f"Final mV: {mv}")
         logging.info(
             "-------------------- Auto Adjust Saturation Done --------------------"
         )
@@ -685,6 +698,8 @@ class MyGUI(QMainWindow):
                     and len(light_level_queue) > 2
                     and class_ != "pass"
                 ):
+                    self.debug_console_controller.tune_up_light()
+                    light_level += 1
                     logging.warning("Oscillation detected. Please adjust manually.")
                     await LV5600Tasks.scale_and_cursor(
                         self.telnet_client,
@@ -738,6 +753,7 @@ class MyGUI(QMainWindow):
                 self.lcdNumber_n1.display(final_mv_value)
 
             self.progressBar.setValue(100)
+            await self.clicked_capture_n_send_bmp(mode = "NOISE", message = f"Current mV: {final_mv_value}")
             logging.info(
                 "-------------------- Auto Adjust Noise Done --------------------"
             )
@@ -822,3 +838,60 @@ class MyGUI(QMainWindow):
             logging.info(f"Setting light level to {light_level}")
             self.debug_console_controller.set_light_level(light_level)
             logging.info("-------------------- Light level set --------------------")
+    
+    @asyncSlot()
+    async def clicked_terminate(self):
+        logging.warning("You have clicked the terminate button")
+        # stop every task that is currently running, go back to when the app launched
+        
+        await self.telnet_client.close()
+        try:
+            self.ftp_client.close()
+        except ConnectionError:
+            pass
+        self.debug_console_controller.stop_tasks()
+
+        # reset the state of UI components
+        self.pushButton_establish_connection.setEnabled(True)
+        self.pushButton_initialize_lv5600.setEnabled(False)
+        self.pushButton_auto_wb.setEnabled(False)
+        self.pushButton_capture_n_classify_sat.setEnabled(False)
+        self.pushButton_auto_adjust_sat.setEnabled(False)
+        self.pushButton_SAT_mode.setEnabled(False)
+        self.pushButton_mask_mode.setEnabled(False)
+        self.pushButton_light_setting.setEnabled(False)
+        self.pushButton_capture_n_send_bmp.setEnabled(False)
+        self.pushButton_auto_adjust_n1.setEnabled(False)
+        self.pushButton_auto_adjust_n1_plus20.setEnabled(False)
+        self.pushButton_auto_adjust_n1_minus20.setEnabled(False)
+        self.pushButton_terminate.setEnabled(False)
+        self.textBrowser.setEnabled(False)
+        self.graphicsView.setEnabled(False)
+        self.label_graphics.setEnabled(False)
+        self.label_n1.setEnabled(False)
+        self.label_n1plus20.setEnabled(False)
+        self.label_n1minus20.setEnabled(False)
+        self.label_SAT_mode.setEnabled(False)
+        self.label_mask_mode.setEnabled(False)
+        self.lcdNumber_n1.setEnabled(False)
+        self.lcdNumber_n1plus20.setEnabled(False)
+        self.lcdNumber_n1minus20.setEnabled(False)
+        self.progressBar.setEnabled(False)
+
+        # reset the state of the lcd
+        self.lcdNumber_n1.display(0)
+        self.lcdNumber_n1plus20.display(0)
+        self.lcdNumber_n1minus20.display(0)
+
+        # reset the state of the graphics view
+        self.graphicsView.setScene(None)
+        self.label_graphics.setText("Image Display")
+        self.label_SAT_mode.setText("Unset")
+        self.label_mask_mode.setText("Unset")
+        self.progressBar.setValue(0)
+
+        # reset internal state
+        self.wb_n1_value = -1
+
+        logging.info("-------------------- Terminated --------------------")
+
