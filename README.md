@@ -1,5 +1,6 @@
 # LV5600-Automation
 [![Python application build](https://github.com/Ry3nG/LV5600-Automation/actions/workflows/main.yml/badge.svg)](https://github.com/Ry3nG/LV5600-Automation/actions/workflows/main.yml)
+[![Python Code Formatting](https://github.com/Ry3nG/LV5600-Automation/actions/workflows/format.yml/badge.svg)](https://github.com/Ry3nG/LV5600-Automation/actions/workflows/format.yml)
 ### Introduction
 The LV5600 Automation project is a Proof-of-Concept project, aims to provice a set of tools and a graphical user interface for automated control and interaction with Leader LV5600 Waveform Monitor.
 
