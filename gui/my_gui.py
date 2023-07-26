@@ -585,6 +585,8 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_auto_adjust_sat(self):
+        self.debug_console_controller.set_mask_mode("ON")
+        self.label_mask_mode.setText("Mask On")
         self.debug_console_controller.reset_light_level()
         logging.info("-------------------- Auto Adjust Saturation --------------------")
         local_file_path = os.path.join(
@@ -711,6 +713,9 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_auto_adjust_noise(self, mode):
+        self.debug_console_controller.set_mask_mode("ON")
+        self.label_mask_mode.setText("Mask On")
+        
         if mode not in ["UP", "DOWN", "EQUAL"]:
             logging.warning("Invalid mode!")
             message = QMessageBox()
