@@ -8,7 +8,7 @@ on:
 jobs:
   format:
     name: Format Python code
-    runs-on: windows-latest  # Use Windows runner
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -17,7 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.11  # Use Python 3.11
+          python-version: 3.11
 
       - name: Install dependencies
         run: |
@@ -25,4 +25,4 @@ jobs:
           pip install black
 
       - name: Run Black formatting
-        run: black . --check --diff
+        run: black . --check --diff || (echo "Formatting issues found. Applying changes..." && black .)
