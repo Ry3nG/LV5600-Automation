@@ -5,7 +5,7 @@ from config.application_config import AppConfig
 class LV5600Tasks:
 
     @staticmethod
-    async def initialize_lv5600(telnet_client) -> bool:
+    async def initialize_lv5600(telnet_client):
         app_config = AppConfig()
         response = None
         try:
@@ -95,8 +95,6 @@ class LV5600Tasks:
             logging.error("Error setting waveform cursor unit: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform cursor unit: " + str(e))
-        
-        return True
         
     @staticmethod
     async def capture_n_send_bmp(telnet_client,ftp_client,file_path) -> bool:

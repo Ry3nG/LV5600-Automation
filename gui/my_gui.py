@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import (
 )
 
 from PyQt5 import uic
-from PyQt5.QtGui import QIcon, QPixmap, QFont
+from PyQt5.QtGui import QIcon, QPixmap
 from qasync import asyncSlot
 from PyQt5.QtCore import Qt
 from Constants import CalculationConstants, FTPConstants
@@ -32,9 +32,11 @@ from config.application_config import AppConfig
 from gui.telnet_settings_dialog import TelnetSettingsDialog
 from gui.ftp_settings_dialog import FTPSettingsDialog
 from gui.log_handler import LogHandler
+from gui.dialog_handler import DialogHandler
 
 from tasks.lv5600_tasks import LV5600Tasks
 from tasks.calculation_tasks import CalculationTasks
+from tasks.connection_tasks import ConnectionTask
 
 
 class MyGUI(QMainWindow):
@@ -83,6 +85,8 @@ class MyGUI(QMainWindow):
 
         # initiaize the application config
         self.app_config = AppConfig()
+        
+        self.dialog_handler = DialogHandler()
 
         # initialize the Telnet and FTP clients with values from the config
         self.telnet_client = TelnetController(
@@ -271,38 +275,27 @@ class MyGUI(QMainWindow):
     @asyncSlot()
     async def establish_connection(self):
         try:
-            logging.info("Establishing Telnet connection")
-            logging.debug("Telnet address: " + self.app_config.get_telnet_address())
-            logging.debug("Telnet port: " + str(self.app_config.get_telnet_port()))
-            logging.debug("Telnet username: " + self.app_config.get_telnet_username())
-            logging.debug("Telnet password: " + self.app_config.get_telnet_password())
-            await self.telnet_client.connect()
-            logging.info("Telnet connection established")
-            await self.telnet_client.login()
-            logging.info("Logged into Telnet successfully")
-
+            status = await ConnectionTask.connect_to_telnet(self.telnet_client)
+            if status == True:
+                logging.info("Telnet connection established")
+            else:
+                logging.error("Telnet connection failed")
         except Exception as e:
             logging.error("Error establishing Telnet connection: " + str(e))
             await self.telnet_client.close()
-            message = QMessageBox()
-            message.setWindowTitle("Error")
-            message.setText("Check if the LV5600 is connected!")
-            message.setIcon(QMessageBox.Critical)
-            message.exec()
+            self.dialog_handler.show_error_dialog("Check if the LV5600 is connected!")
             return
 
+
         try:
-            if not self.debug_console_controller.activate():
-                logging.error("Error activating debug console")
-                return
-            logging.info("Debug console activated")
+            status = ConnectionTask.connect_to_debugconsole(self.debug_console_controller)
+            if status == True:
+                logging.info("Debug console connection established")
+            else:
+                logging.error("Debug console connection failed")
         except Exception as e:
-            logging.error("Error activating debug console: " + str(e))
-            message = QMessageBox()
-            message.setWindowTitle("Error")
-            message.setText("Check if the debug console is connected!")
-            message.setIcon(QMessageBox.Critical)
-            message.exec()
+            self.dialog_handler.show_error_dialog("Check if the debug console is connected!")
+            logging.error("Error establishing Debug console connection: " + str(e))
             return
 
         # disable establish connection related components
@@ -364,32 +357,15 @@ class MyGUI(QMainWindow):
     @asyncSlot()
     async def clicked_initialize_lv5600(self):
         logging.info("-------------------- Initializing LV5600 --------------------")
-        exec_status = False
 
         try:
-            exec_status = await LV5600Tasks.initialize_lv5600(self.telnet_client)
+            await LV5600Tasks.initialize_lv5600(self.telnet_client)
+            logging.info("-------------------- LV5600 initialized --------------------")
         except Exception as e:
             logging.error("Error initializing LV5600: " + str(e))
-
-            message = QMessageBox()
-            message.setWindowTitle("Error")
-            message.setText(
-                "Error initializing LV5600, retrying telnet connection may help! Click OK to retry."
-            )
-            message.setIcon(QMessageBox.Critical)
-            message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-            result = message.exec()
-            if result == QMessageBox.Ok:
-                await self.establish_connection()
-                exec_status = await LV5600Tasks.initialize_lv5600(self.telnet_client)
+            self.dialog_handler.show_error_dialog("Error initializing LV5600!")
             return
-
-        if exec_status:
-            logging.info("-------------------- LV5600 Initialized --------------------")
-
-        if not exec_status:
-            logging.error("Error initializing LV5600")
-            return
+            
 
     @asyncSlot()
     async def clicked_capture_n_send_bmp(self, mode="SAT", message=None):
@@ -529,6 +505,9 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_auto_wb(self):
+        self.debug_console_controller.set_mask_mode("ON")
+        self.label_mask_mode.setText("Mask On")
+        sleep(2)
         logging.info("-------------------- Auto White Balance --------------------")
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
@@ -587,6 +566,7 @@ class MyGUI(QMainWindow):
     async def clicked_auto_adjust_sat(self):
         self.debug_console_controller.set_mask_mode("ON")
         self.label_mask_mode.setText("Mask On")
+        sleep(2)
         self.debug_console_controller.reset_light_level()
         logging.info("-------------------- Auto Adjust Saturation --------------------")
         local_file_path = os.path.join(
@@ -715,7 +695,7 @@ class MyGUI(QMainWindow):
     async def clicked_auto_adjust_noise(self, mode):
         self.debug_console_controller.set_mask_mode("ON")
         self.label_mask_mode.setText("Mask On")
-        
+        sleep(2)
         if mode not in ["UP", "DOWN", "EQUAL"]:
             logging.warning("Invalid mode!")
             message = QMessageBox()
