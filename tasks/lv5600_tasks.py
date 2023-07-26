@@ -1,11 +1,12 @@
 from commands.command_utils import CaptureCommand, InputCommand, PresetCommand,SYSCommand,WFMCommand
 import logging
 import Constants
-
+from config.application_config import AppConfig
 class LV5600Tasks:
 
     @staticmethod
     async def initialize_lv5600(telnet_client) -> bool:
+        app_config = AppConfig()
         response = None
         try:
             response = await telnet_client.send_command(SYSCommand.system_initialize())
@@ -24,7 +25,7 @@ class LV5600Tasks:
             raise Exception("Error enabling waveform line: " + str(e))
 
         try:
-            response = await telnet_client.send_command(WFMCommand.wfm_line_number(Constants.LV5600Constants.LINE_NUMBER))
+            response = await telnet_client.send_command(WFMCommand.wfm_line_number(int(app_config.get_line_number())))
             logging.debug("The response is " + str(response))
         except Exception as e:
             logging.error("Error setting waveform line number: " + str(e))

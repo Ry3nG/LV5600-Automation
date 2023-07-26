@@ -101,3 +101,9 @@ class AppConfig:
     
     def get_flatness_check_threshold(self):
         return self.config.getfloat("constants", "flatness_check_threshold")
+    
+    def get_line_number(self):
+        return self.config.get("lv5600", "line_number")
+    
+    def set_line_number(self, line_number):
+        self.config.set("lv5600", "line_number", str(line_number))

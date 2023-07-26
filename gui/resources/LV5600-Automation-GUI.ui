@@ -723,6 +723,7 @@
     <addaction name="actionEdit_target_tolerance"/>
     <addaction name="actionEdit_Saturation_Target_mV"/>
     <addaction name="actionEdit_Oversaturate_Threshold"/>
+    <addaction name="actionEdit_Line_Number"/>
    </widget>
    <addaction name="menuSettings"/>
   </widget>
@@ -773,6 +774,14 @@
    </property>
    <property name="text">
     <string>Edit Oversaturate Threshold</string>
+   </property>
+  </action>
+  <action name="actionEdit_Line_Number">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit Line Number</string>
    </property>
   </action>
  </widget>

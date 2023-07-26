@@ -127,6 +127,7 @@ class MyGUI(QMainWindow):
         )
         self.actionEdit_Saturation_Target_mV.triggered.connect(self.open_saturation_target_dialog)  # type: ignore
         self.actionEdit_Oversaturate_Threshold.triggered.connect(self.open_oversaturate_threshold_dialog)  # type: ignore
+        self.actionEdit_Line_Number.triggered.connect(self.open_line_number_dialog)  # type: ignore
         self.pushButton_login.clicked.connect(self.login)
         self.pushButton_establish_connection.clicked.connect(self.establish_connection)
         self.pushButton_initialize_lv5600.clicked.connect(
@@ -173,6 +174,7 @@ class MyGUI(QMainWindow):
             self.actionEdit_target_tolerance.setEnabled(True)  # type: ignore
             self.actionEdit_Saturation_Target_mV.setEnabled(True)  # type: ignore
             self.actionEdit_Oversaturate_Threshold.setEnabled(True)  # type: ignore
+            self.actionEdit_Line_Number.setEnabled(True)  # type: ignore
         else:
             message = QMessageBox()
             message.setWindowTitle("Error")
@@ -249,6 +251,22 @@ class MyGUI(QMainWindow):
         if ok:
             self.app_config.set_flatness_check_threshold(oversaturated_threshold)
             self.app_config.save_config_to_file()
+
+    def open_line_number_dialog(self):
+        # let the user select a line number and write back to the config file
+        # range from 0 to 32767
+        line_number, ok = QInputDialog.getInt(
+            self, "Line Number", "Enter Line Number", 580, 0, 32767, 1
+        )
+        if ok:
+            self.app_config.set_line_number(line_number)
+            self.app_config.save_config_to_file()
+            # prompt the user to press initialize LV5600
+            message = QMessageBox()
+            message.setWindowTitle("Info")
+            message.setText("Please press Initialize LV5600")
+            message.setIcon(QMessageBox.Information)
+            message.exec()
 
     @asyncSlot()
     async def establish_connection(self):
