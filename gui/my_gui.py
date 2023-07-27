@@ -403,19 +403,7 @@ class MyGUI(QMainWindow):
                     )
         except Exception as e:
             logging.error("Error capturing and sending BMP: " + str(e))
-
-            message = QMessageBox()
-            message.setWindowTitle("Error")
-            message.setText(
-                "Error capturing and sending BMP, retrying may help! Click OK to retry."
-            )
-            message.setIcon(QMessageBox.Critical)
-            message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-            result = message.exec()
-
-            if result == QMessageBox.Ok:
-                await self.establish_connection()
-                await self.clicked_capture_n_send_bmp()
+            self.dialog_handler.show_error_dialog("Error capturing and sending BMP!")
             return
 
         if not exec_status:
