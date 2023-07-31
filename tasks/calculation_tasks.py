@@ -8,7 +8,6 @@ from Constants import (
     PreprocessingConstants,
     LV5600Constants,
 )
-import cv2
 from config.application_config import AppConfig
 
 

@@ -17,7 +17,6 @@ class CalculationConstants:
     AVERAGE_COUNT = 4
     JUMP_THRESHOLD = 0.97  # 97% of the target value
     CURSOR_TO_MV_FACTOR = 0.07
-    MAX_SATURATION_MV_VALUE = 770
 
 
 class PreprocessingConstants:

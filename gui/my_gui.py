@@ -140,7 +140,9 @@ class MyGUI(QMainWindow):
         self.pushButton_capture_n_send_bmp.clicked.connect(
             self.clicked_capture_n_send_bmp
         )
-
+        self.pushButton_capture_sat_value.clicked.connect(
+            self.clicked_capture_sat_value
+        )
         self.pushButton_capture_n_classify_sat.clicked.connect(
             self.clicked_capture_n_classify
         )
@@ -326,6 +328,7 @@ class MyGUI(QMainWindow):
         self.lcdNumber_n1plus20.setEnabled(True)
         self.lcdNumber_n1minus20.setEnabled(True)
         self.progressBar.setEnabled(True)
+        self.pushButton_capture_sat_value.setEnabled(True)
 
         # check whether local directory exists
         local_dir = self.app_config.get_local_file_path()
@@ -366,7 +369,6 @@ class MyGUI(QMainWindow):
             self.dialog_handler.show_error_dialog("Error initializing LV5600!")
             return
             
-
     @asyncSlot()
     async def clicked_capture_n_send_bmp(self, mode="SAT", message=None):
         logging.info(
@@ -411,10 +413,48 @@ class MyGUI(QMainWindow):
             return
 
     @asyncSlot()
+    async def clicked_capture_sat_value(self):
+        self.debug_console_controller.activate()
+        self.debug_console_controller.set_light_level(75)
+        local_file_path = os.path.join(
+            self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
+        )
+        with FTPSession(self.ftp_client) as ftp_client:
+            await LV5600Tasks.capture_n_send_bmp(
+                self.telnet_client, ftp_client, local_file_path
+            )
+            (
+                mid_cyan_y_value,
+                flatness,
+            ) = await CalculationTasks.preprocess_and_get_mid_cyan("SAT")
+            if flatness == False:
+                # prompt the user to confirm
+                message = QMessageBox()
+                message.setIcon(QMessageBox.Warning)
+                message.setText(
+                    "The image is not flat. Are you sure you want to continue?"
+                )
+                message.setWindowTitle("Warning")
+                message.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                message.setDefaultButton(QMessageBox.No)
+                reply = message.exec_()
+                if reply == QMessageBox.No:
+                    return
+            cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
+            self.app_config.set_target_saturation(mv)
+            self.app_config.save_config_to_file()
+            # put the cursor on the target saturation
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
+            # display in graphics view
+            pixmap = QPixmap(local_file_path)
+            self.display_image_and_title(pixmap, "Target Saturation mV: " + str(mv))
+            logging.info(f"Target saturation set to {mv} mV")
+
+    @asyncSlot()
     async def average_n_classify_helper(
         self,
         local_file_path,
-        target=CalculationConstants.MAX_SATURATION_MV_VALUE,
+        target,
         mode="SAT",
         progressBarOn=True,
     ):
@@ -462,6 +502,7 @@ class MyGUI(QMainWindow):
                 elif class_ == "high" or flatness == True:
                     class_ = "Over Saturated"
 
+
             # turn on scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
 
@@ -473,7 +514,8 @@ class MyGUI(QMainWindow):
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
         )
-        class_, mv = await self.average_n_classify_helper(local_file_path)
+        sat_target = self.app_config.get_target_saturation()
+        class_, mv = await self.average_n_classify_helper(local_file_path,sat_target)
 
         # capture a new image as result
         with FTPSession(self.ftp_client) as ftp_client:
@@ -493,6 +535,7 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_auto_wb(self):
+        self.debug_console_controller.activate()
         self.debug_console_controller.set_mask_mode("ON")
         self.label_mask_mode.setText("Mask On")
         sleep(2)
@@ -568,7 +611,7 @@ class MyGUI(QMainWindow):
         self.progressBar.setValue(0)
         while True:
             class_, mv = await self.average_n_classify_helper(
-                local_file_path, progressBarOn=False
+                local_file_path, target = target, progressBarOn=False
             )
 
             logging.info(f"Class: {class_}, MV: {mv}")
@@ -910,6 +953,7 @@ class MyGUI(QMainWindow):
         self.pushButton_auto_adjust_n1_plus20.setEnabled(False)
         self.pushButton_auto_adjust_n1_minus20.setEnabled(False)
         self.pushButton_terminate.setEnabled(False)
+        self.pushButton_capture_sat_value.setEnabled(False)
         self.textBrowser.setEnabled(False)
         self.graphicsView.setEnabled(False)
         self.label_graphics.setEnabled(False)
