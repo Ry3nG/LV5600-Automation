@@ -66,9 +66,12 @@ class CalculationTasks:
 
             #target_high = min(target * (1 + tolerance),CalculationConstants.MAX_SATURATION_MV_VALUE)
             target_high = target * (1 + tolerance)
+            logging.debug(f"The target range will be [{target}, {target_high}], as we want to prevent undersaturation")
             logging.debug(f"target_high: {target_high}")
-            target_low = max(target * (1 - tolerance),0)
-            logging.debug(f"target_low: {target_low}")
+            #target_low = max(target * (1 - tolerance),0)
+            #logging.debug(f"target_low: {target_low}")
+            target_low = target
+            logging.debug(f"target_low (adjusted to target itself as tester suggests): {target_low}")
 
             if mv_value >= target_high:
                 return "high"
