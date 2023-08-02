@@ -75,7 +75,7 @@ class CalculationTasks:
 
             if mv_value >= target_high:
                 return "high"
-            elif mv_value <= target_low:
+            elif mv_value < target_low:
                 return "low"
             else:
                 return "pass"
