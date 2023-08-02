@@ -415,7 +415,7 @@ class MyGUI(QMainWindow):
     @asyncSlot()
     async def clicked_capture_sat_value(self):
         self.debug_console_controller.activate()
-        self.debug_console_controller.set_light_level(75)
+        self.debug_console_controller.set_light_level(200)
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
         )

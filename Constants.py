@@ -20,7 +20,7 @@ class CalculationConstants:
 
 
 class PreprocessingConstants:
-    ROI_COORDINATES_Y1 = 93
+    ROI_COORDINATES_Y1 = 87
     ROI_COORDINATES_Y2 = 775
     ROI_COORDINATES_X1 = 755
     ROI_COORDINATES_X2 = 1745
