@@ -62,7 +62,7 @@ Some of the most important files to understand include:
 1. Make sure to have Python 3.7+ installed
 2. Clone the repository
 3. Navigate to the project directory
-4. Start a virtual environment using `python -m venv venv`, then activate it using `venv\Scripts\activate.bat` or `source venv/bin/activate` on Linux
+4. Start a virtual environment using `python -m venv venv`, then activate it using `.\venv\Scripts\activate ` or `source venv/bin/activate` on Linux
 5. Install the required packages using `pip install -r requirements.txt`
 6. Run the application using `python main.py`
 
