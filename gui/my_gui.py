@@ -807,20 +807,60 @@ class MyGUI(QMainWindow):
                             logging.info("User cancelled, go back to main menu")
                             return
                     continue
+                
+                # if we have enough data points, perform linear regression
+                if (
+                    len(mv_queue) >= queue_size
+                    and mv < target * CalculationConstants.JUMP_THRESHOLD
+                ):
+                    x = np.array(light_level_queue)
+                    y = np.array(mv_queue)
+                    coefficients = np.polyfit(x, y, 1)
+                    slope = coefficients[0]
+                    intercept = coefficients[1]
 
-                if class_ == "low":
-                    logging.info("Single stepping up")
+                    # predict the light level that would give an mv value close to the target
+                    predicted_light_level = (
+                        target * CalculationConstants.JUMP_THRESHOLD - intercept
+                    ) / slope
+                    predicted_light_level = int(
+                        round(min(max(predicted_light_level, 0), 255))
+                    )
+
+                    # ensure prediced_light_level is smaller than current light level + 20 (prevent overstepping)
+                    if predicted_light_level > light_level + 20:
+                        predicted_light_level = light_level + 20
+                    
+                    if predicted_light_level <= light_level:
+                        predicted_light_level = light_level + 1
+                    
+                    # adjust the light level towards the predicted_light_level
+                    logging.info(f"Predicted Light Level: {predicted_light_level}")
+                    self.debug_console_controller.tune_to_target_level(
+                        predicted_light_level, light_level
+                    )
+                    light_level = predicted_light_level
+
+                elif mv < target * CalculationConstants.JUMP_THRESHOLD:
+                    logging.info("mv is below threshold, tuning up light")
                     self.debug_console_controller.tune_up_light()
                     light_level += 1
-                elif class_ == "high":
-                    logging.info("Single stepping down")
-                    self.debug_console_controller.tune_down_light()
-                    light_level -= 1
-                elif class_ == "pass":
-                    break
                 else:
-                    logging.error("Invalid class")
-                    break
+
+
+                    if class_ == "low":
+                        logging.info("Single stepping up")
+                        self.debug_console_controller.tune_up_light()
+                        light_level += 1
+                    elif class_ == "high":
+                        logging.info("Single stepping down")
+                        self.debug_console_controller.tune_down_light()
+                        light_level -= 1
+                    elif class_ == "pass":
+                        break
+                    else:
+                        logging.error("Invalid class")
+                        break
 
                 progress = int(round((1 - abs(target - mv) / abs(target - 0)) * 100))
                 self.progressBar.setValue(progress)
