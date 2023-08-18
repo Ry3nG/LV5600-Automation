@@ -492,7 +492,7 @@ class MyGUI(QMainWindow):
 
             # classify SAT using mv
             tolerance = self.app_config.get_target_tolerance()
-            class_ = CalculationTasks.classify_mv_level(mv, target, tolerance)
+            class_ = CalculationTasks.classify_mv_level(mv, target, tolerance,mode)
 
             if mode == "SAT":
                 if class_ == "pass" and flatness == False:
@@ -630,8 +630,6 @@ class MyGUI(QMainWindow):
                 and len(light_level_queue) > 2
                 and class_ != "Just Saturated"
             ):
-                self.debug_console_controller.tune_up_light()
-                light_level += 1
                 logging.warning("Oscillation detected. Please adjust manually.")
                 await LV5600Tasks.scale_and_cursor(
                     self.telnet_client,
@@ -781,8 +779,6 @@ class MyGUI(QMainWindow):
                     and len(light_level_queue) > 2
                     and class_ != "pass"
                 ):
-                    self.debug_console_controller.tune_up_light()
-                    light_level += 1
                     logging.warning("Oscillation detected. Please adjust manually.")
                     await LV5600Tasks.scale_and_cursor(
                         self.telnet_client,

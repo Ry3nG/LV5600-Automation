@@ -50,7 +50,7 @@ class CalculationTasks:
             return np.nan
 
     @staticmethod
-    def classify_mv_level(mv_value, target,tolerance) -> str:
+    def classify_mv_level(mv_value, target,tolerance,mode) -> str:
         try:
             if mv_value is None:
                 raise ValueError("mv_value is None")
@@ -63,15 +63,14 @@ class CalculationTasks:
             if target <= 0:
                 raise ValueError("target must be greater than 0")
 
-
-            #target_high = min(target * (1 + tolerance),CalculationConstants.MAX_SATURATION_MV_VALUE)
-            target_high = target * (1 + tolerance)
-            logging.debug(f"The target range will be [{target}, {target_high}], as we want to prevent undersaturation")
-            logging.debug(f"target_high: {target_high}")
-            #target_low = max(target * (1 - tolerance),0)
-            #logging.debug(f"target_low: {target_low}")
-            target_low = target
-            logging.debug(f"target_low (adjusted to target itself as tester suggests): {target_low}")
+            if mode == "SAT":
+                target_high = target * (1 + tolerance)
+                target_low = target
+                logging.debug(f"The target range will be [{target}, {target_high}], as we want to prevent undersaturation")
+            else:
+                target_high = target * (1 + tolerance)
+                target_low = max(target * (1 - tolerance),0)
+                logging.debug(f"The target range will be [{target_low}, {target_high}]")
 
             if mv_value >= target_high:
                 return "high"
