@@ -101,6 +101,14 @@ class WFMCommand:
                 )
 
         return "WFM:CURSOR:UNIT:" + ch + " " + input
+    
+    def wfm_cursor_value(input):
+        # check if input is ON or OFF
+        if input != "ON" and input != "OFF":
+            raise ValueError("Invalid input. Input must be ON or OFF.")
+
+        #  WFM:CURSOR:VALUE ON
+        return "WFM:CURSOR:VALUE " + input
 
 class CaptureCommand:
     @staticmethod

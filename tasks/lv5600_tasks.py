@@ -95,6 +95,15 @@ class LV5600Tasks:
             logging.error("Error setting waveform cursor unit: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform cursor unit: " + str(e))
+
+        try:
+            response = await telnet_client.send_command(WFMCommand.wfm_cursor_value("ON"))
+            logging.debug("The response is " + str(response))
+        except Exception as e:
+            logging.error("Error setting waveform cursor value: " + str(e))
+            logging.debug("The response is " + str(response))
+            raise Exception("Error setting waveform cursor value: " + str(e))
+
         
     @staticmethod
     async def capture_n_send_bmp(telnet_client,ftp_client,file_path) -> bool:
