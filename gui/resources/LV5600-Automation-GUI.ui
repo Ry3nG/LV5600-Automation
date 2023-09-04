@@ -741,7 +741,14 @@
     <addaction name="actionEdit_Oversaturate_Threshold"/>
     <addaction name="actionEdit_Line_Number"/>
    </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuSettings"/>
+   <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionTelnet_Settings">
@@ -798,6 +805,11 @@
    </property>
    <property name="text">
     <string>Edit Line Number</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>
