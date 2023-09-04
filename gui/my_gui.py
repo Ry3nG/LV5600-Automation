@@ -28,6 +28,7 @@ from controllers.telnet_controller import TelnetController
 from controllers.ftp_controller import FTPController
 from controllers.debug_console_controller import DebugConsoleController
 from config.application_config import AppConfig
+from gui.about_dialog import AboutDialog
 
 from gui.telnet_settings_dialog import TelnetSettingsDialog
 from gui.ftp_settings_dialog import FTPSettingsDialog
@@ -132,6 +133,7 @@ class MyGUI(QMainWindow):
         self.actionEdit_Saturation_Target_mV.triggered.connect(self.open_saturation_target_dialog)  # type: ignore
         self.actionEdit_Oversaturate_Threshold.triggered.connect(self.open_oversaturate_threshold_dialog)  # type: ignore
         self.actionEdit_Line_Number.triggered.connect(self.open_line_number_dialog)  # type: ignore
+        self.actionAbout.triggered.connect(self.show_about_dialog)  # type: ignore
         self.pushButton_login.clicked.connect(self.login)
         self.pushButton_establish_connection.clicked.connect(self.establish_connection)
         self.pushButton_initialize_lv5600.clicked.connect(
@@ -274,6 +276,14 @@ class MyGUI(QMainWindow):
             message.setIcon(QMessageBox.Information)
             message.exec()
 
+    def show_about_dialog(self):
+        # Create a new AboutDialog
+        dialog = AboutDialog()
+        logging.debug("About dialog created")
+        # Show the dialog modally
+        dialog.exec()
+
+
     @asyncSlot()
     async def establish_connection(self):
         try:
@@ -333,15 +343,8 @@ class MyGUI(QMainWindow):
         # check whether local directory exists
         local_dir = self.app_config.get_local_file_path()
         if not os.path.exists(local_dir):
-            message = QMessageBox()
-            message.setIcon(QMessageBox.Warning)
-            message.setText(
-                f"Local directory {local_dir} does not exist. Please select a new directory."
-            )
-            message.setWindowTitle("Warning")
-            message.setStandardButtons(QMessageBox.Ok)
-            message.exec_()
-            self.open_local_file_path_dialog()
+            # create the local directory
+            os.makedirs(local_dir)
 
     def display_image_and_title(self, pixmap, title):
         new_size = self.graphicsView.size()
