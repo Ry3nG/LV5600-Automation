@@ -4,7 +4,7 @@ block_cipher = None
 
 a = Analysis(['main.py'],
              pathex=['.'],
-             binaries=[],
+             binaries=[('libs/WinInputSimulator.dll', '.')],
              datas=[('gui/resources/LV5600-Automation-GUI.ui', 'resources'),
                     ('gui/resources/icon.ico', 'resources'),
                     ('config/config.ini', 'config')],
