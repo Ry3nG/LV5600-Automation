@@ -1,4 +1,5 @@
 from ctypes import POINTER, c_void_p, cdll, c_wchar_p, c_int, c_ushort
+import logging
 
 
 class WinInputSimulator():
@@ -16,12 +17,28 @@ class WinInputSimulator():
     FAILED_TO_SET_CURSOR_POS = 10
     UNKNOWN_ERROR = 99
 
+    DLL_error_code = {
+        SUCCESS: "Success",
+        WINDOW_NOT_FOUND: "Window not found",
+        FAILED_TO_ACTIVATE: "Failed to activate window",
+        FAILED_TO_PRESS_KEY: "Failed to press key",
+        FAILED_TO_MOVE_CURSOR: "Failed to move cursor",
+        FAILED_TO_LEFT_CLICK: "Failed to left click",
+        FAILED_TO_RIGHT_CLICK: "Failed to right click",
+        FAILED_TO_SCROLL: "Failed to scroll",
+        CURSOR_OUT_OF_BOUNDS: "Cursor out of bounds",
+        FAILED_TO_GET_WINDOW_RECT: "Failed to get window rect",
+        FAILED_TO_SET_CURSOR_POS: "Failed to set cursor position",
+        UNKNOWN_ERROR: "Unknown error",
+    }
+
+
     def __init__(self):
         self.myDLL = cdll.LoadLibrary('lib\\WinInputSimulator.dll')
         if not self.myDLL:
             raise Exception("Could not load DLL")
         else:
-            print("DLL loaded")
+            logging.info("WinInputSimulator DLL loaded successfully")
 
         self.activate = self.myDLL.Activate
         self.activate.argtypes = [c_wchar_p, c_int]
