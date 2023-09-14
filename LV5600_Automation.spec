@@ -4,7 +4,9 @@ block_cipher = None
 
 a = Analysis(['main.py'],
              pathex=['.'],
-             binaries=[('lib/WinInputSimulator.dll', '.')],
+             binaries=[('lib/WinInputSimulator.dll', '.'),
+                       ('lib/opencv_world480.dll', '.'),
+                       ('lib/WaveformImageAnalysisLib.dll', '.')],
              datas=[('gui/resources/LV5600-Automation-GUI.ui', 'resources'),
                     ('gui/resources/icon.ico', 'resources'),
                     ('config/config.ini', 'config')],
