@@ -17,9 +17,8 @@ class CalculationConstants:
     AVERAGE_COUNT = 4
     JUMP_THRESHOLD = 0.97  # 97% of the target value
     CURSOR_TO_MV_FACTOR = 0.07
-
-
-class PreprocessingConstants:
+    SAT_MODE = 0
+    NOISE_MODE = 1
     ROI_COORDINATES_Y1 = 87
     ROI_COORDINATES_Y2 = 775
     ROI_COORDINATES_X1 = 755
