@@ -27,16 +27,19 @@ from controllers.ftp_session_controller import FTPSession
 from controllers.telnet_controller import TelnetController
 from controllers.ftp_controller import FTPController
 from controllers.debug_console_controller import DebugConsoleController
-from config.application_config import AppConfig
-from gui.about_dialog import AboutDialog
+from controllers.waveform_image_analysis_controller import (
+    WaveformImageAnalysisController,
+)
 
+from config.application_config import AppConfig
+
+from gui.about_dialog import AboutDialog
 from gui.telnet_settings_dialog import TelnetSettingsDialog
 from gui.ftp_settings_dialog import FTPSettingsDialog
 from gui.log_handler import LogHandler
 from gui.dialog_handler import DialogHandler
 
 from tasks.lv5600_tasks import LV5600Tasks
-from tasks.calculation_tasks import CalculationTasks
 from tasks.connection_tasks import ConnectionTask
 
 
@@ -86,7 +89,7 @@ class MyGUI(QMainWindow):
 
         # initiaize the application config
         self.app_config = AppConfig()
-        
+
         self.dialog_handler = DialogHandler()
 
         # initialize the Telnet and FTP clients with values from the config
@@ -103,6 +106,8 @@ class MyGUI(QMainWindow):
         )
 
         self.debug_console_controller = DebugConsoleController()
+
+        self.waveform_image_analysis_controller = WaveformImageAnalysisController()
 
         self.wb_n1_value = -1
 
@@ -283,7 +288,6 @@ class MyGUI(QMainWindow):
         # Show the dialog modally
         dialog.exec()
 
-
     @asyncSlot()
     async def establish_connection(self):
         try:
@@ -298,15 +302,18 @@ class MyGUI(QMainWindow):
             self.dialog_handler.show_error_dialog("Check if the LV5600 is connected!")
             return
 
-
         try:
-            status = ConnectionTask.connect_to_debugconsole(self.debug_console_controller)
+            status = ConnectionTask.connect_to_debugconsole(
+                self.debug_console_controller
+            )
             if status == True:
                 logging.info("Debug console connection established")
             else:
                 logging.error("Debug console connection failed")
         except Exception as e:
-            self.dialog_handler.show_error_dialog("Check if the debug console is connected!")
+            self.dialog_handler.show_error_dialog(
+                "Check if the debug console is connected!"
+            )
             logging.error("Error establishing Debug console connection: " + str(e))
             return
 
@@ -371,7 +378,7 @@ class MyGUI(QMainWindow):
             logging.error("Error initializing LV5600: " + str(e))
             self.dialog_handler.show_error_dialog("Error initializing LV5600!")
             return
-            
+
     @asyncSlot()
     async def clicked_capture_n_send_bmp(self, mode="SAT", message=None):
         logging.info(
@@ -388,11 +395,14 @@ class MyGUI(QMainWindow):
                 exec_status = await LV5600Tasks.capture_n_send_bmp(
                     self.telnet_client, ftp_client, local_file_path
                 )
-                (
-                    mid_cyan_y_value,
-                    flatness,
-                ) = await CalculationTasks.preprocess_and_get_mid_cyan(mode)
-                cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
+                mv = self.waveform_image_analysis_controller.get_current_mv(
+                    local_file_path,
+                    CalculationConstants.SAT_MODE,
+                    CalculationConstants.ROI_COORDINATES_X1,
+                    CalculationConstants.ROI_COORDINATES_X2,
+                    CalculationConstants.ROI_COORDINATES_Y1,
+                    CalculationConstants.ROI_COORDINATES_Y2,
+                )
                 # display in graphics view
                 pixmap = QPixmap(local_file_path)
                 if message == None:
@@ -426,24 +436,15 @@ class MyGUI(QMainWindow):
             await LV5600Tasks.capture_n_send_bmp(
                 self.telnet_client, ftp_client, local_file_path
             )
-            (
-                mid_cyan_y_value,
-                flatness,
-            ) = await CalculationTasks.preprocess_and_get_mid_cyan("SAT")
-            if flatness == False:
-                # prompt the user to confirm
-                message = QMessageBox()
-                message.setIcon(QMessageBox.Warning)
-                message.setText(
-                    "The image is not flat. Are you sure you want to continue?"
-                )
-                message.setWindowTitle("Warning")
-                message.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-                message.setDefaultButton(QMessageBox.No)
-                reply = message.exec_()
-                if reply == QMessageBox.No:
-                    return
-            cursor, mv = CalculationTasks.get_cursor_and_mv(mid_cyan_y_value)
+            mv = self.waveform_image_analysis_controller.get_current_mv(
+                local_file_path,
+                CalculationConstants.SAT_MODE,
+                CalculationConstants.ROI_COORDINATES_X1,
+                CalculationConstants.ROI_COORDINATES_X2,
+                CalculationConstants.ROI_COORDINATES_Y1,
+                CalculationConstants.ROI_COORDINATES_Y2,
+            )
+            cursor = mv / CalculationConstants.CURSOR_TO_MV_FACTOR
             self.app_config.set_target_saturation(mv)
             self.app_config.save_config_to_file()
             # put the cursor on the target saturation
@@ -466,8 +467,7 @@ class MyGUI(QMainWindow):
             await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
 
             # capture multiple images and preprocess them to get the mean mid_cyan_y_value
-            mid_cyan_y_values = []
-            flatness = False
+            mv_values = []
             self.progressBar.setValue(0) if progressBarOn else None
             for i in range(CalculationConstants.AVERAGE_COUNT):
                 logging.info(f"Processing image {i+1}")
@@ -476,35 +476,65 @@ class MyGUI(QMainWindow):
                 )
                 pixmap = QPixmap(local_file_path)
                 self.display_image_and_title(pixmap, "Processing image " + str(i + 1))
-                (
-                    mid_cyan_y_value,
-                    flatness,
-                ) = await CalculationTasks.preprocess_and_get_mid_cyan(mode)
-                mid_cyan_y_values.append(mid_cyan_y_value)
+                mv_value = self.waveform_image_analysis_controller.get_current_mv(
+                    local_file_path,
+                    CalculationConstants.SAT_MODE,
+                    CalculationConstants.ROI_COORDINATES_X1,
+                    CalculationConstants.ROI_COORDINATES_X2,
+                    CalculationConstants.ROI_COORDINATES_Y1,
+                    CalculationConstants.ROI_COORDINATES_Y2,
+                )
+                mv_values.append(mv_value)
                 self.progressBar.setValue(
                     int((i + 1) * 100 / CalculationConstants.AVERAGE_COUNT)
                 ) if progressBarOn else None
 
-            # get the mean mid_cyan_y_value
-            mean_cyan_y_value = sum(mid_cyan_y_values) / len(mid_cyan_y_values)
-            logging.debug(f"Mean Cyan Y Value: {mean_cyan_y_value}")
-
-            # get cursor and mv
-            cursor, mv = CalculationTasks.get_cursor_and_mv(mean_cyan_y_value)
+            # Get the mean mv_value
+            mv = sum(mv_values) / len(mv_values)
+            cursor = mv / CalculationConstants.CURSOR_TO_MV_FACTOR
+            mv = round(mv,1)
+            cursor = round(cursor)
             logging.debug(f"Cursor: {cursor}, MV: {mv}")
 
+            flatness_pixelCount = self.app_config.get_flatness_check_pixel()
+            flatness_sv_threshold = self.app_config.get_flatness_check_sv_threshold()
+
+            logging.info("Flatness params: " + str(flatness_pixelCount)+ ''+str(flatness_sv_threshold))
             # classify SAT using mv
             tolerance = self.app_config.get_target_tolerance()
-            class_ = CalculationTasks.classify_mv_level(mv, target, tolerance,mode)
-
-            if mode == "SAT":
-                if class_ == "pass" and flatness == False:
-                    class_ = "Just Saturated"
-                elif class_ == "low":
-                    class_ = "Under Saturated"
-                elif class_ == "high" or flatness == True:
+            class_ = self.waveform_image_analysis_controller.classify_waveform(
+                local_file_path,
+                target,
+                tolerance,
+                flatness_pixelCount,
+                flatness_sv_threshold,
+                CalculationConstants.ROI_COORDINATES_X1,
+                CalculationConstants.ROI_COORDINATES_X2,
+                CalculationConstants.ROI_COORDINATES_Y1,
+                CalculationConstants.ROI_COORDINATES_Y2,
+                CalculationConstants.SAT_MODE,
+            )
+            logging.info("DLL Classification Result:" + str(class_))
+            if mode == 'SAT':
+                if class_ == 0:
                     class_ = "Over Saturated"
-
+                elif class_ == 1:
+                    class_ = "Under Saturated"
+                elif class_ == 2:
+                    class_ = "Just Saturated"
+                else:
+                    logging.error("Classification Result is:"+str(class_))
+                    class_ = "Unknown"
+            elif mode == "NOISE":
+                if class_ == 0:
+                    class_ = "high"
+                elif class_ == 1:
+                    class_ = "low"
+                elif class_ == 2:
+                    class_ = "pass"
+                else:
+                    logging.error("Classification Result is:"+str(class_))
+                    class_ = "Unknown"
 
             # turn on scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
@@ -518,7 +548,7 @@ class MyGUI(QMainWindow):
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
         )
         sat_target = self.app_config.get_target_saturation()
-        class_, mv = await self.average_n_classify_helper(local_file_path,sat_target)
+        class_, mv = await self.average_n_classify_helper(local_file_path, sat_target)
 
         # capture a new image as result
         with FTPSession(self.ftp_client) as ftp_client:
@@ -551,7 +581,7 @@ class MyGUI(QMainWindow):
             await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
             self.progressBar.setValue(0)
             # capture multiple images and preprocess them to get the mean mid_cyan_y_value
-            mid_cyan_y_values = []
+            mv_values = []
             for i in range(CalculationConstants.AVERAGE_COUNT):
                 logging.info(f"Processing image {i+1}")
                 # capture an image
@@ -560,21 +590,24 @@ class MyGUI(QMainWindow):
                 )
                 pixmap = QPixmap(local_file_path)
                 self.display_image_and_title(pixmap, "Processing image " + str(i + 1))
-                # preprocess the image
-                (
-                    mid_cyan_y_value,
-                    flatness,
-                ) = await CalculationTasks.preprocess_and_get_mid_cyan("WB")
-                mid_cyan_y_values.append(mid_cyan_y_value)
+                mv_value = self.waveform_image_analysis_controller.get_current_mv(
+                    local_file_path,
+                    CalculationConstants.NOISE_MODE,
+                    CalculationConstants.ROI_COORDINATES_X1,
+                    CalculationConstants.ROI_COORDINATES_X2,
+                    CalculationConstants.ROI_COORDINATES_Y1,
+                    CalculationConstants.ROI_COORDINATES_Y2,
+                )
+                mv_values.append(mv_value)
                 self.progressBar.setValue(
                     int((i + 1) * 100 / CalculationConstants.AVERAGE_COUNT)
                 )
 
-            # get the mean mid_cyan_y_value
-            mean_cyan_y_value = sum(mid_cyan_y_values) / len(mid_cyan_y_values)
-            logging.debug(f"Mean Cyan Y Value: {mean_cyan_y_value}")
             # get cursor and mv
-            cursor, mv = CalculationTasks.get_cursor_and_mv(mean_cyan_y_value)
+            mv = sum(mv_values) / len(mv_values)
+            cursor = mv / CalculationConstants.CURSOR_TO_MV_FACTOR
+            mv = round(mv,1)
+            cursor = round(cursor)
             logging.debug(f"Cursor: {cursor}, MV: {mv}")
 
             # turn on scale and cursor
@@ -614,7 +647,7 @@ class MyGUI(QMainWindow):
         self.progressBar.setValue(0)
         while True:
             class_, mv = await self.average_n_classify_helper(
-                local_file_path, target = target, progressBarOn=False
+                local_file_path, target=target, progressBarOn=False
             )
 
             logging.info(f"Class: {class_}, MV: {mv}")
@@ -810,7 +843,7 @@ class MyGUI(QMainWindow):
                             logging.info("User cancelled, go back to main menu")
                             return
                     continue
-                
+
                 # if we have enough data points, perform linear regression
                 if (
                     len(mv_queue) >= queue_size
@@ -833,10 +866,10 @@ class MyGUI(QMainWindow):
                     # ensure prediced_light_level is smaller than current light level + 20 (prevent overstepping)
                     if predicted_light_level > light_level + 20:
                         predicted_light_level = light_level + 20
-                    
+
                     if predicted_light_level <= light_level:
                         predicted_light_level = light_level + 1
-                    
+
                     # adjust the light level towards the predicted_light_level
                     logging.info(f"Predicted Light Level: {predicted_light_level}")
                     self.debug_console_controller.tune_to_target_level(
@@ -849,8 +882,6 @@ class MyGUI(QMainWindow):
                     self.debug_console_controller.tune_up_light()
                     light_level += 1
                 else:
-
-
                     if class_ == "low":
                         logging.info("Single stepping up")
                         self.debug_console_controller.tune_up_light()
