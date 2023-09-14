@@ -492,31 +492,49 @@ class MyGUI(QMainWindow):
             # Get the mean mv_value
             mv = sum(mv_values) / len(mv_values)
             cursor = mv / CalculationConstants.CURSOR_TO_MV_FACTOR
+            mv = round(mv,1)
+            cursor = round(cursor)
             logging.debug(f"Cursor: {cursor}, MV: {mv}")
 
+            flatness_pixelCount = self.app_config.get_flatness_check_pixel()
+            flatness_sv_threshold = self.app_config.get_flatness_check_sv_threshold()
+
+            logging.info("Flatness params: " + str(flatness_pixelCount)+ ''+str(flatness_sv_threshold))
             # classify SAT using mv
             tolerance = self.app_config.get_target_tolerance()
             class_ = self.waveform_image_analysis_controller.classify_waveform(
                 local_file_path,
                 target,
                 tolerance,
-                self.app_config.get_flatness_check_pixel(),
-                self.app_config.get_flatness_check_sv_threshold(),
+                flatness_pixelCount,
+                flatness_sv_threshold,
                 CalculationConstants.ROI_COORDINATES_X1,
                 CalculationConstants.ROI_COORDINATES_X2,
                 CalculationConstants.ROI_COORDINATES_Y1,
                 CalculationConstants.ROI_COORDINATES_Y2,
                 CalculationConstants.SAT_MODE,
             )
-
-            if class_ == 0:
-                class_ = "Oversaturated"
-            elif class_ == 1:
-                class_ = "Undersaturated"
-            elif class_ == 2:
-                class_ = "Just saturated"
-            else:
-                class_ = "Unknown"
+            logging.info("DLL Classification Result:" + str(class_))
+            if mode == 'SAT':
+                if class_ == 0:
+                    class_ = "Over Saturated"
+                elif class_ == 1:
+                    class_ = "Under Saturated"
+                elif class_ == 2:
+                    class_ = "Just Saturated"
+                else:
+                    logging.error("Classification Result is:"+str(class_))
+                    class_ = "Unknown"
+            elif mode == "NOISE":
+                if class_ == 0:
+                    class_ = "high"
+                elif class_ == 1:
+                    class_ = "low"
+                elif class_ == 2:
+                    class_ = "pass"
+                else:
+                    logging.error("Classification Result is:"+str(class_))
+                    class_ = "Unknown"
 
             # turn on scale and cursor
             await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
@@ -588,6 +606,8 @@ class MyGUI(QMainWindow):
             # get cursor and mv
             mv = sum(mv_values) / len(mv_values)
             cursor = mv / CalculationConstants.CURSOR_TO_MV_FACTOR
+            mv = round(mv,1)
+            cursor = round(cursor)
             logging.debug(f"Cursor: {cursor}, MV: {mv}")
 
             # turn on scale and cursor
