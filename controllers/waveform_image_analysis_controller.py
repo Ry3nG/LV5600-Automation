@@ -55,10 +55,6 @@ class WaveformImageAnalysisController:
     def get_current_mv(
         self, image_path, calculation_type, roi_x1, roi_x2, roi_y1, roi_y2
     ):
-        print(roi_x1)
-        print(roi_x2)
-        print(roi_y1)
-        print(roi_y2)
         result = self.get_current_mv_dll(
             image_path.encode("utf-8"),
             roi_x1,
@@ -68,6 +64,8 @@ class WaveformImageAnalysisController:
             calculation_type,
         )
         self._check_error(result)
+        # make sure the result is round to 1 decimal place
+        result = round(result, 1)
         return result
 
     def get_current_cursor_level(
@@ -83,6 +81,8 @@ class WaveformImageAnalysisController:
             calculation_type,
         )
         self._check_error(result)
+        # make sure the result is round to integer
+        result = round(result)
         return result
 
     def classify_waveform(
