@@ -1,0 +1,1032 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1117</width>
+    <height>635</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>0</height>
+    </size>
+   </property>
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="0">
+     <widget class="QFrame" name="mainframe">
+      <property name="minimumSize">
+       <size>
+        <width>1024</width>
+        <height>576</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>1280</width>
+        <height>720</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Bahnschrift Light Condensed</family>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QFrame" name="ioframe">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <family>Bahnschrift Light Condensed</family>
+           <pointsize>11</pointsize>
+          </font>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QFrame" name="toolbarframe">
+            <property name="minimumSize">
+             <size>
+              <width>400</width>
+              <height>360</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>400</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Bahnschrift Light Condensed</family>
+              <pointsize>11</pointsize>
+             </font>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QToolBox" name="ToolBox">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>16772215</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Bahnschrift SemiBold</family>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
+               <property name="mouseTracking">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string/>
+               </property>
+               <property name="accessibleName">
+                <string/>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="currentIndex">
+                <number>0</number>
+               </property>
+               <widget class="QWidget" name="toolBoxPage1" native="true">
+                <attribute name="label">
+                 <string>Setup and Initialization</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_5">
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_3">
+                   <item row="6" column="0">
+                    <widget class="QPushButton" name="pushButton_edit_telnet_settings">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Telnet Settings</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="7" column="0">
+                    <widget class="QPushButton" name="pushButton_edit_ftp_settings">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>FTP Settings</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="QPushButton" name="pushButton_initialize_lv5600">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Initialize LV5600</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QPushButton" name="pushButton_establish_connection">
+                     <property name="minimumSize">
+                      <size>
+                       <width>175</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Establish Connection</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="10" column="0">
+                    <widget class="QPushButton" name="pushButton_edit_line_number">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Edit Line Number</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QLabel" name="label_establish_connection">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Telnet Not Connected</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="11" column="0">
+                    <spacer name="verticalSpacer">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="5" column="0" colspan="2">
+                    <widget class="Line" name="line">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>10</height>
+                      </size>
+                     </property>
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="7" column="1" rowspan="4">
+                    <widget class="QTextBrowser" name="textBrowser_current_settings"/>
+                   </item>
+                   <item row="9" column="0">
+                    <widget class="QPushButton" name="pushButton_edit_target_tolerance">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Edit Target Tolerance</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="6" column="1">
+                    <widget class="QLabel" name="label_current_settings">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Current Settings:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <spacer name="verticalSpacer_6">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QLabel" name="label_initialize_lv5600">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>LV5600 Not Initialized!</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="8" column="0">
+                    <widget class="QPushButton" name="pushButton_edit_local_file_path">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Edit Local File Path</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="0">
+                    <spacer name="verticalSpacer_7">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="toolBoxPage2" native="true">
+                <attribute name="label">
+                 <string>OCB Control</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_4">
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_6">
+                   <item row="1" column="1">
+                    <widget class="QComboBox" name="comboBox_mask_mode">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>Mask On</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Mask Off</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Mask Cross</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item row="3" column="1">
+                    <widget class="QComboBox" name="comboBox_agc_setting">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>WLI Mode</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>NBI Mode</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>RDI Mode</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>AGC On</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>AGC Off</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item row="5" column="1">
+                    <widget class="QSpinBox" name="spinBox_light_level">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="maximum">
+                      <number>256</number>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="label_5">
+                     <property name="maximumSize">
+                      <size>
+                       <width>100</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="text">
+                      <string>Mask Mode: </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="0">
+                    <widget class="QLabel" name="label_6">
+                     <property name="text">
+                      <string>AGC Setting:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="0">
+                    <widget class="QLabel" name="label_7">
+                     <property name="text">
+                      <string>Light Level:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="6" column="0">
+                    <spacer name="verticalSpacer_4">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="3" column="2">
+                    <widget class="QPushButton" name="pushButton_deliver_agc_setting">
+                     <property name="maximumSize">
+                      <size>
+                       <width>75</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Deliver</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
+                    <spacer name="verticalSpacer_2">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="4" column="0">
+                    <spacer name="verticalSpacer_3">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="0" column="0">
+                    <spacer name="verticalSpacer_5">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="5" column="2">
+                    <widget class="QPushButton" name="pushButton_deliver_light_level">
+                     <property name="maximumSize">
+                      <size>
+                       <width>75</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Deliver</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="2">
+                    <widget class="QPushButton" name="pushButton_deliver_mask_mode">
+                     <property name="maximumSize">
+                      <size>
+                       <width>75</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="layoutDirection">
+                      <enum>Qt::LeftToRight</enum>
+                     </property>
+                     <property name="text">
+                      <string>Deliver</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="toolBoxPage3" native="true">
+                <attribute name="label">
+                 <string>Dynamic Range Automation</string>
+                </attribute>
+                <layout class="QVBoxLayout" name="verticalLayout_6">
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_7">
+                   <item row="3" column="0">
+                    <widget class="QPushButton" name="pushButton_classify_sat">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Classify Current waveform</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="0">
+                    <widget class="QPushButton" name="pushButton_set_sat">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Set waveform to Saturate</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QPushButton" name="pushButton_capture_sat_value">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Capture SAT Value</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <spacer name="verticalSpacer_8">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="2" column="0">
+                    <spacer name="verticalSpacer_10">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="4" column="0">
+                    <spacer name="verticalSpacer_11">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="6" column="0">
+                    <spacer name="verticalSpacer_13">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="2" column="2">
+                    <widget class="QLCDNumber" name="lcdNumber_sat_target_value"/>
+                   </item>
+                   <item row="1" column="2">
+                    <widget class="QLabel" name="label_11">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>SAT Target Value:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <spacer name="horizontalSpacer_5">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Fixed</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="page_5">
+                <attribute name="label">
+                 <string>Noise Automation</string>
+                </attribute>
+                <layout class="QGridLayout" name="gridLayout_5">
+                 <item row="0" column="0">
+                  <layout class="QGridLayout" name="gridLayout_4">
+                   <item row="8" column="2">
+                    <widget class="QLabel" name="label_10">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>N1-20mV</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="2">
+                    <widget class="QLCDNumber" name="lcdNumber_n1value"/>
+                   </item>
+                   <item row="0" column="1">
+                    <spacer name="horizontalSpacer_4">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Fixed</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>30</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="4" column="2">
+                    <widget class="QLabel" name="label_8">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>N1 Value: </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="9" column="2">
+                    <widget class="QLCDNumber" name="lcdNumber_n1m20value"/>
+                   </item>
+                   <item row="7" column="2">
+                    <widget class="QLCDNumber" name="lcdNumber_n1p20value"/>
+                   </item>
+                   <item row="6" column="2">
+                    <widget class="QLabel" name="label_9">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>N1+20mV:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <spacer name="verticalSpacer_9">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="4" column="0">
+                    <widget class="QPushButton" name="pushButton_setn1">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Set WF to N1 Value</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="6" column="0">
+                    <widget class="QPushButton" name="pushButton_setn1p20">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Set WF to N1+20mV</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="0">
+                    <spacer name="verticalSpacer_14">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="8" column="0">
+                    <widget class="QPushButton" name="pushButton_setn1m0">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Set WF to N1-20mV</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="7" column="0">
+                    <spacer name="verticalSpacer_15">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="3" column="0">
+                    <spacer name="verticalSpacer_12">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="QPushButton" name="pushButton_capturen1">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift</family>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Capture N1 Value</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="9" column="0">
+                    <spacer name="verticalSpacer_16">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QFrame" name="graphicsframe">
+            <property name="minimumSize">
+             <size>
+              <width>640</width>
+              <height>360</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>1000</width>
+              <height>1000</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Bahnschrift SemiBold</family>
+              <pointsize>11</pointsize>
+             </font>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_2">
+             <property name="spacing">
+              <number>9</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QFrame" name="frame">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>50</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>50</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Bahnschrift Light Condensed</family>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
+               <property name="frameShape">
+                <enum>QFrame::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_3">
+                <item>
+                 <widget class="QLabel" name="label_2">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>200</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Bahnschrift SemiBold</family>
+                    <pointsize>18</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>LV5600 OCB Automation Tool</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGraphicsView" name="graphicsView">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>640</width>
+                 <height>360</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>1000</width>
+                 <height>360</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Bahnschrift Light Condensed</family>
+                 <pointsize>11</pointsize>
+                </font>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Console:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTextBrowser" name="textBrowser_console">
+               <property name="minimumSize">
+                <size>
+                 <width>640</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1117</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
