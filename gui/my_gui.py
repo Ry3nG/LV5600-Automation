@@ -266,13 +266,12 @@ class MainWindow(QMainWindow):
             self.debug_console_controller.set_mask_mode("CROSS")
         toc = time.time()
 
-        logging.info("-------------------- Mask Mode Delivered --------------------")
         logging.info(f"Time Elapsed: {toc - tic} seconds")
 
     def deliverAgcSetting(self):
         selected_setting = self.comboBox_agc_setting.currentText()
         logging.info(f"Selected AGC Setting: {selected_setting}")
-        
+
         tic = time.time()
         if selected_setting == "WLI Mode":
             self.debug_console_controller.set_AGC_mode("WLI")
@@ -284,13 +283,15 @@ class MainWindow(QMainWindow):
             self.debug_console_controller.set_AGC_mode("ON")
         elif selected_setting == "AGC Off":
             self.debug_console_controller.set_AGC_mode("OFF")
-
         toc = time.time()
-        logging.info("-------------------- AGC Setting Delivered --------------------")
         logging.info(f"Time Elapsed: {toc - tic} seconds")
-
 
     def deliverLightLevel(self):
         selected_light_level = self.spinBox_light_level.value()
         logging.info(f"Selected Light Level: {selected_light_level}")
+
+        tic = time.time()
         self.debug_console_controller.set_light_level(selected_light_level)
+        toc = time.time()
+
+        logging.info(f"Time Elapsed: {toc - tic} seconds")
