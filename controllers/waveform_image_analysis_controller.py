@@ -1,6 +1,8 @@
 from ctypes import c_char_p, c_int, c_float, cdll
 import logging
 
+from Constants import CalculationConstants
+
 
 class WaveformImageAnalysisController:
     DLL_error_code = {
@@ -73,7 +75,6 @@ class WaveformImageAnalysisController:
     ):
         result = self.get_current_cursor_level_dll(
             image_path.encode("utf-8"),
-            
             roi_x1,
             roi_x2,
             roi_y1,
@@ -112,3 +113,16 @@ class WaveformImageAnalysisController:
         )
         self._check_error(result)
         return result
+
+    def compute_mv_cursor(self, image_path, mode):
+        mv = self.get_current_mv(
+            image_path,
+            mode,
+            CalculationConstants.ROI_COORDINATES_X1,
+            CalculationConstants.ROI_COORDINATES_X2,
+            CalculationConstants.ROI_COORDINATES_Y1,
+            CalculationConstants.ROI_COORDINATES_Y2,
+        )
+        cursor = mv / CalculationConstants.CURSOR_TO_MV_FACTOR
+
+        return mv, cursor
