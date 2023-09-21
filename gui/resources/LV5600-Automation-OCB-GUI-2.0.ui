@@ -131,7 +131,15 @@
                <property name="currentIndex">
                 <number>0</number>
                </property>
-               <widget class="QWidget" name="toolBoxPage1" native="true">
+               <widget class="QWidget" name="toolBoxPage1">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>0</y>
+                  <width>380</width>
+                  <height>388</height>
+                 </rect>
+                </property>
                 <attribute name="label">
                  <string>Setup and Initialization</string>
                 </attribute>
@@ -243,7 +251,14 @@
                     </widget>
                    </item>
                    <item row="7" column="1" rowspan="4">
-                    <widget class="QTextBrowser" name="textBrowser_current_settings"/>
+                    <widget class="QTextBrowser" name="textBrowser_current_settings">
+                     <property name="font">
+                      <font>
+                       <family>Bahnschrift Condensed</family>
+                       <pointsize>11</pointsize>
+                      </font>
+                     </property>
+                    </widget>
                    </item>
                    <item row="9" column="0">
                     <widget class="QPushButton" name="pushButton_edit_target_tolerance">
@@ -323,7 +338,15 @@
                  </item>
                 </layout>
                </widget>
-               <widget class="QWidget" name="toolBoxPage2" native="true">
+               <widget class="QWidget" name="toolBoxPage2">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>0</y>
+                  <width>380</width>
+                  <height>388</height>
+                 </rect>
+                </property>
                 <attribute name="label">
                  <string>OCB Control</string>
                 </attribute>
@@ -540,7 +563,15 @@
                  </item>
                 </layout>
                </widget>
-               <widget class="QWidget" name="toolBoxPage3" native="true">
+               <widget class="QWidget" name="toolBoxPage3">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>0</y>
+                  <width>380</width>
+                  <height>388</height>
+                 </rect>
+                </property>
                 <attribute name="label">
                  <string>Dynamic Range Automation</string>
                 </attribute>
@@ -671,6 +702,14 @@
                 </layout>
                </widget>
                <widget class="QWidget" name="page_5">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>0</y>
+                  <width>380</width>
+                  <height>388</height>
+                 </rect>
+                </property>
                 <attribute name="label">
                  <string>Noise Automation</string>
                 </attribute>
@@ -989,6 +1028,12 @@
                  <width>640</width>
                  <height>0</height>
                 </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Bahnschrift Condensed</family>
+                 <pointsize>11</pointsize>
+                </font>
                </property>
               </widget>
              </item>
