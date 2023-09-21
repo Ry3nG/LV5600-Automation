@@ -28,10 +28,12 @@ from gui.ftp_settings_dialog import FTPSettingsDialog
 from gui.log_handler import LogHandler
 from gui.resources import resources_rc
 import sys
+from gui.target_tolerance_dialog import TargetToleranceDialog
 from gui.telnet_settings_dialog import TelnetSettingsDialog
 
 from tasks.connection_tasks import ConnectionTask
 from tasks.lv5600_tasks import LV5600Tasks
+from utils.decorators import time_it_async, time_it_sync
 
 
 class LoginWindow(QMainWindow):
@@ -178,33 +180,31 @@ class MainWindow(QMainWindow):
         self.textBrowser_current_settings.setText(current_settings)
 
     @asyncSlot()
+    @time_it_async
     async def establishConnection(self):
         logging.info(
             "-------------------- Establishing Connection --------------------"
         )
-        # time the operation
-        tic = time.time()
+
         try:
             await ConnectionTask.connect_to_telnet(self.telnet_clinet)
         except Exception as e:
             logging.error(f"Error while establishing connection: {str(e)}")
             return
-        toc = time.time()
+
         logging.info("-------------------- Connection Established --------------------")
-        logging.info(f"Time Elapsed: {toc - tic} seconds")
 
     @asyncSlot()
+    @time_it_async
     async def initializeLV5600(self):
         logging.info("-------------------- Initializing LV5600 --------------------")
-        tic = time.time()
         try:
             await LV5600Tasks.initialize_lv5600(self.telnet_clinet)
         except Exception as e:
             logging.error(f"Error while initializing LV5600: {str(e)}")
             return
-        toc = time.time()
+
         logging.info("-------------------- LV5600 Initialized --------------------")
-        logging.info(f"Time Elapsed: {toc - tic} seconds")
 
     def editTelnetSettings(self):
         self.telnet_settings_dialog = TelnetSettingsDialog(self.app_config_handler)
@@ -234,14 +234,8 @@ class MainWindow(QMainWindow):
             self.app_config_handler.save_config_to_file()
 
     def editTargetTolerance(self):
-        current_value = self.app_config_handler.get_target_tolerance()
-        current_value = float(current_value)
-        target_tolerance, ok = QInputDialog.getDouble(
-            self, "Target Tolerance", "Enter Target Tolerance:", current_value, 0, 1, 2
-        )
-        if ok:
-            self.app_config_handler.set_target_tolerance(target_tolerance)
-            self.app_config_handler.save_config_to_file()
+        self.target_tolerance_dialog = TargetToleranceDialog(self.app_config_handler)
+        self.target_tolerance_dialog.exec_()
 
     def editLineNumber(self):
         current_value = self.app_config_handler.get_line_number()
@@ -253,26 +247,21 @@ class MainWindow(QMainWindow):
             self.app_config_handler.set_line_number(line_number)
             self.app_config_handler.save_config_to_file()
 
-    def deliverMaskMode(self):
+    @time_it_sync
+    def deliverMaskMode(self, _=None):
         selected_mode = self.comboBox_mask_mode.currentText()
         logging.info(f"Selected Mask Mode: {selected_mode}")
-
-        tic = time.time()
         if selected_mode == "Mask On":
             self.debug_console_controller.set_mask_mode("ON")
         elif selected_mode == "Mask Off":
             self.debug_console_controller.set_mask_mode("OFF")
         elif selected_mode == "Mask Cross":
             self.debug_console_controller.set_mask_mode("CROSS")
-        toc = time.time()
 
-        logging.info(f"Time Elapsed: {toc - tic} seconds")
-
-    def deliverAgcSetting(self):
+    @time_it_sync
+    def deliverAgcSetting(self, _=None):
         selected_setting = self.comboBox_agc_setting.currentText()
         logging.info(f"Selected AGC Setting: {selected_setting}")
-
-        tic = time.time()
         if selected_setting == "WLI Mode":
             self.debug_console_controller.set_AGC_mode("WLI")
         elif selected_setting == "NBI Mode":
@@ -283,15 +272,9 @@ class MainWindow(QMainWindow):
             self.debug_console_controller.set_AGC_mode("ON")
         elif selected_setting == "AGC Off":
             self.debug_console_controller.set_AGC_mode("OFF")
-        toc = time.time()
-        logging.info(f"Time Elapsed: {toc - tic} seconds")
 
-    def deliverLightLevel(self):
+    @time_it_sync
+    def deliverLightLevel(self, _=None):
         selected_light_level = self.spinBox_light_level.value()
         logging.info(f"Selected Light Level: {selected_light_level}")
-
-        tic = time.time()
         self.debug_console_controller.set_light_level(selected_light_level)
-        toc = time.time()
-
-        logging.info(f"Time Elapsed: {toc - tic} seconds")
