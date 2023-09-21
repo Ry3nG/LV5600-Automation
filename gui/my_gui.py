@@ -17,9 +17,11 @@ from PyQt5.QtWidgets import (
 from PyQt5 import QtCore, uic
 from PyQt5.QtGui import QPixmap
 from qasync import asyncSlot
+from Constants import CalculationConstants, FTPConstants
 from config.application_config import AppConfig
 from controllers.debug_console_controller import DebugConsoleController
 from controllers.ftp_controller import FTPController
+from controllers.ftp_session_controller import FTPSession
 from controllers.telnet_controller import TelnetController
 from controllers.waveform_image_analysis_controller import (
     WaveformImageAnalysisController,
@@ -88,6 +90,7 @@ class MainWindow(QMainWindow):
         self.setupToolBoxView()
         self.setupWelcomeImage()
         self.updateCurrentSettings()
+        self.lcdNumber_sat_target_value.display(self.app_config_handler.get_target_saturation())
 
     def setupToolBoxView(self):
         self.ToolBox.setCurrentIndex(0)
@@ -155,6 +158,17 @@ class MainWindow(QMainWindow):
         else:
             event.ignore()
 
+    def display_image(self, local_file_path):
+        pixmap = QPixmap(local_file_path)
+        new_size = self.graphicsView.size()
+        pixmap = pixmap.scaled(new_size, QtCore.Qt.KeepAspectRatio)
+
+        scene = QGraphicsScene()
+        pixmap_item = QGraphicsPixmapItem(pixmap)
+        scene.addItem(pixmap_item)
+        self.graphicsView.setScene(scene)
+        self.graphicsView.fitInView(pixmap_item)
+
     def setupEvents(self):
         # Page 1 - Setup and Initialization
         self.pushButton_establish_connection.clicked.connect(self.establishConnection)
@@ -174,6 +188,9 @@ class MainWindow(QMainWindow):
         self.pushButton_deliver_light_level.clicked.connect(self.deliverLightLevel)
 
         # Page 3 - Dynamic Range Automation
+        self.pushButton_capture_sat_value.clicked.connect(self.captureSatValue)
+        self.pushButton_classify_sat.clicked.connect(self.classifySat)
+        self.pushButton_set_sat.clicked.connect(self.setSat)
 
     def updateCurrentSettings(self):
         current_settings = self.app_config_handler.get_current_settings()
@@ -192,6 +209,9 @@ class MainWindow(QMainWindow):
             logging.error(f"Error while establishing connection: {str(e)}")
             return
 
+        self.label_establish_connection.setText(
+            "Telnet Connected" + time.strftime("%H:%M:%S", time.localtime())
+        )
         logging.info("-------------------- Connection Established --------------------")
 
     @asyncSlot()
@@ -204,6 +224,9 @@ class MainWindow(QMainWindow):
             logging.error(f"Error while initializing LV5600: {str(e)}")
             return
 
+        self.label_initialize_lv5600.setText(
+            "LV5600 Initialized" + time.strftime("%H:%M:%S", time.localtime())
+        )
         logging.info("-------------------- LV5600 Initialized --------------------")
 
     def editTelnetSettings(self):
@@ -278,3 +301,147 @@ class MainWindow(QMainWindow):
         selected_light_level = self.spinBox_light_level.value()
         logging.info(f"Selected Light Level: {selected_light_level}")
         self.debug_console_controller.set_light_level(selected_light_level)
+
+    @asyncSlot()
+    async def capture_image_to_local(self):
+        local_file_path = os.path.join(
+            self.app_config_handler.get_local_file_path(),
+            FTPConstants.LOCAL_FILE_NAME_BMP,
+        )
+        with FTPSession(self.ftp_client) as ftp_client:
+            await LV5600Tasks.capture_n_send_bmp(
+                self.telnet_clinet, ftp_client, local_file_path
+            )
+        return local_file_path
+
+    @asyncSlot()
+    @time_it_async
+    async def captureSatValue(self):
+        logging.info("-------------------- Capturing Saturation --------------------")
+        self.debug_console_controller.set_light_level(200)
+        local_file_path = await self.capture_image_to_local()
+        mv, cursor = self.wfm_image_analysis_controller.compute_mv_cursor(
+            local_file_path, CalculationConstants.SAT_MODE
+        )
+
+        self.app_config_handler.set_target_saturation(mv)
+        self.app_config_handler.save_config_to_file()
+
+        # Put the cursor on the waveform
+        await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+
+        # display the image on the GUI
+
+        self.display_image(local_file_path)
+
+        logging.info(f"Saturation Value: {mv} mV")
+        self.lcdNumber_sat_target_value.display(mv)
+
+        logging.info(
+            "-------------------- Saturation Value Captured --------------------"
+        )
+
+    @asyncSlot()
+    @time_it_async
+    async def classifySat(self):
+        # capture an image and classify it
+        logging.info("-------------------- Classifying Saturation --------------------")
+        local_file_path = await self.capture_image_to_local()
+        mv, cursor = self.wfm_image_analysis_controller.compute_mv_cursor(
+            local_file_path, CalculationConstants.SAT_MODE
+        )
+        logging.info("Current mV: " + str(mv) + " mV")
+
+        target = self.app_config_handler.get_target_saturation()
+        tolerance = self.app_config_handler.get_target_tolerance()
+        flat_pixel_count = self.app_config_handler.get_flatness_check_pixel()
+        flat_sv_threshold = self.app_config_handler.get_flatness_check_sv_threshold()
+        class_ = self.wfm_image_analysis_controller.classify_waveform(
+            local_file_path,
+            target,
+            tolerance,
+            flat_pixel_count,
+            flat_sv_threshold,
+            CalculationConstants.ROI_COORDINATES_X1,
+            CalculationConstants.ROI_COORDINATES_X2,
+            CalculationConstants.ROI_COORDINATES_Y1,
+            CalculationConstants.ROI_COORDINATES_Y2,
+            CalculationConstants.SAT_MODE,
+        )
+        if class_ == 0:
+            class_ = "Over Saturated"
+        elif class_ == 1:
+            class_ = "Under Saturated"
+        elif class_ == 2:
+            class_ = "Just Saturated"
+        else:
+            logging.error("Classification Result is:" + str(class_))
+            class_ = "Unknown"
+
+        # turn on scale and cursor
+        await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+        # display the image on the GUI
+        self.display_image(local_file_path)
+        logging.info("Current waveform is: " + class_)
+
+        # pop up:
+        QMessageBox.information(self, "Classification Result", class_)
+        logging.info(
+            "-------------------- Saturation Value Classified --------------------"
+        )
+
+    @asyncSlot()
+    @time_it_async
+    async def setSat(self):
+        logging.info("-------------------- Setting Saturation --------------------")
+        self.debug_console_controller.reset_light_level()
+        time.sleep(1)
+
+        light_level_upper_bound = 256
+        light_level_lower_bound = 0
+
+        target = self.app_config_handler.get_target_saturation()
+        tolerance = self.app_config_handler.get_target_tolerance()
+        flat_pixel_count = self.app_config_handler.get_flatness_check_pixel()
+        flat_sv_threshold = self.app_config_handler.get_flatness_check_sv_threshold()
+
+        while light_level_lower_bound < light_level_upper_bound:
+            middle_light_level = (
+                light_level_upper_bound + light_level_lower_bound
+            ) // 2
+            
+            self.debug_console_controller.set_light_level(middle_light_level)
+            time.sleep(0.2)
+            logging.info(f"Current Light Level: {middle_light_level}")
+
+            local_file_path = await self.capture_image_to_local()
+            self.display_image(local_file_path)
+            mv, cursor = self.wfm_image_analysis_controller.compute_mv_cursor(
+                local_file_path, CalculationConstants.SAT_MODE
+            )
+            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+            class_ = self.wfm_image_analysis_controller.classify_waveform(
+                local_file_path,
+                target,
+                tolerance,
+                flat_pixel_count,
+                flat_sv_threshold,
+                CalculationConstants.ROI_COORDINATES_X1,
+                CalculationConstants.ROI_COORDINATES_X2,
+                CalculationConstants.ROI_COORDINATES_Y1,
+                CalculationConstants.ROI_COORDINATES_Y2,
+                CalculationConstants.SAT_MODE,
+            )
+
+            if class_ == 0: # over saturated
+                light_level_upper_bound = middle_light_level
+            elif class_ == 1:
+                light_level_lower_bound = middle_light_level
+            elif class_ == 2:
+                local_file_path = await self.capture_image_to_local()
+                self.display_image(local_file_path)
+                break
+
+            
+
+        logging.info("-------------------- Saturation Value Set --------------------")
