@@ -1,13 +1,10 @@
 """
 This module provides a class DebugConsoleController that can be used to control the debug console . The class provides methods to move the cursor to specific coordinates, press keys, and adjust the light setting of the console. The module requires the pygetwindow and pyautogui libraries to be installed.
 """
-from ctypes import c_int, c_ushort, c_void_p, c_wchar_p
+from ctypes import c_int, c_ushort, c_wchar_p
 import logging
-import threading
-import pygetwindow as gw
-import pyautogui
-import time
 from controllers.win_input_simulator import WinInputSimulator
+import threading
 
 special_keys = {
     "enter": 0x0D,
@@ -17,6 +14,7 @@ special_keys = {
     "up": 0x26,
     "down": 0x28,
 }
+
 
 class DebugConsoleController:
     """
@@ -70,15 +68,18 @@ class DebugConsoleController:
         Returns:
         bool: True if the operation was successful, False otherwise.
         """
-        activate_status = self.simulator.activate(c_wchar_p(self.WINDOW_TITLE), c_int(0))
+        activate_status = self.simulator.activate(
+            c_wchar_p(self.WINDOW_TITLE), c_int(0)
+        )
         if activate_status != self.simulator.SUCCESS:
-            logging.error("Failed to activate window!, Error code: " + str(activate_status))
+            logging.error(
+                "Failed to activate window!, Error code: " + str(activate_status)
+            )
             return False
-        
+
         self.window = self.simulator.get_windows(self.WINDOW_TITLE)[0]
         return True
-    
-    
+
     def move_and_click(self, x, y):
         """
         Moves the cursor to the specified coordinates and performs a left mouse click.
@@ -97,18 +98,18 @@ class DebugConsoleController:
             return False
 
         # Move the cursor
-        move_status = self.simulator.move_cursor(c_wchar_p(self.WINDOW_TITLE), c_int(x), c_int(y), c_int(0))
+        move_status = self.simulator.move_cursor(
+            c_wchar_p(self.WINDOW_TITLE), c_int(x), c_int(y), c_int(0)
+        )
         if move_status != self.simulator.SUCCESS:
             logging.error("Failed to move cursor!, Error code: " + str(move_status))
             return False
-        
 
         # Perform a left mouse click
         click_status = self.simulator.left_click(c_wchar_p(self.WINDOW_TITLE), c_int(0))
         if click_status != self.simulator.SUCCESS:
             logging.error("Failed to left click!, Error code: " + str(click_status))
             return False
-        
 
         return True
 
@@ -123,11 +124,13 @@ class DebugConsoleController:
         None
         """
         # Press the key
-        key_code = special_keys.get(key.lower(),None)
+        key_code = special_keys.get(key.lower(), None)
         if key_code is None:
             key_code = ord(key)
-    
-        press_status = self.simulator.press_key(c_wchar_p(self.WINDOW_TITLE), c_ushort(key_code), c_int(0))
+
+        press_status = self.simulator.press_key(
+            c_wchar_p(self.WINDOW_TITLE), c_ushort(key_code), c_int(0)
+        )
         if press_status != self.simulator.SUCCESS:
             logging.error("Failed to press key!, Error code: " + str(press_status))
             return False
@@ -202,7 +205,6 @@ class DebugConsoleController:
             )
         else:
             pass
-
 
     def reset_light_level(self):
         """
@@ -324,10 +326,6 @@ class DebugConsoleController:
         )
 
     def stop_tasks(self):
-        if self.window:
-            pyautogui.press("esc")
-            time.sleep(1)
-
         threading.Thread(target=self._stop_threads).start()
 
     def _stop_threads(self):
