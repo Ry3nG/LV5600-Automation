@@ -995,6 +995,50 @@
                   </property>
                  </widget>
                 </item>
+                <item>
+                 <widget class="QPushButton" name="pushButton_terminate">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Bahnschrift SemiBold</family>
+                    <pointsize>11</pointsize>
+                    <weight>75</weight>
+                    <italic>false</italic>
+                    <bold>true</bold>
+                    <underline>false</underline>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QPushButton#pushButton_terminate {
+    background-color: #FF0000; /* Background color (red in this example) */
+    color: #FFFFFF; /* Text color (white in this example) */
+    border: 1px solid #FF0000; /* Border style */
+    border-radius: 5px; /* Rounded corners */
+    padding: 5px 10px; /* Padding (adjust as needed) */
+}
+
+QPushButton#pushButton_terminate:hover {
+    background-color: #FF5555; /* Hover background color */
+    border: 1px solid #FF5555; /* Hover border color */
+    color: #FFFFFF; /* Hover text color */
+}
+
+QPushButton#pushButton_terminate:pressed {
+    background-color: #CC0000; /* Pressed background color */
+    border: 1px solid #CC0000; /* Pressed border color */
+}
+</string>
+                  </property>
+                  <property name="text">
+                   <string>Terminate</string>
+                  </property>
+                 </widget>
+                </item>
                </layout>
               </widget>
              </item>

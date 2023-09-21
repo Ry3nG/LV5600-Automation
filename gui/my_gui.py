@@ -170,6 +170,10 @@ class MainWindow(QMainWindow):
         self.graphicsView.fitInView(pixmap_item)
 
     def setupEvents(self):
+
+        # Terminate button
+        self.pushButton_terminate.clicked.connect(self.terminate)
+
         # Page 1 - Setup and Initialization
         self.pushButton_establish_connection.clicked.connect(self.establishConnection)
         self.pushButton_initialize_lv5600.clicked.connect(self.initializeLV5600)
@@ -197,6 +201,17 @@ class MainWindow(QMainWindow):
         self.textBrowser_current_settings.setText(current_settings)
 
     @asyncSlot()
+    async def terminate(self):
+        logging.warning("You have clicked the terminate button")
+        await self.telnet_clinet.close()
+        try:
+            self.ftp_client.close()
+        except Exception as e:
+            logging.error(f"Error while closing FTP connection: {str(e)}")
+        
+        self.debug_console_controller.stop_tasks()
+
+    @asyncSlot()
     @time_it_async
     async def establishConnection(self):
         logging.info(
@@ -210,7 +225,7 @@ class MainWindow(QMainWindow):
             return
 
         self.label_establish_connection.setText(
-            "Telnet Connected" + time.strftime("%H:%M:%S", time.localtime())
+            "Telnet Connected at: " + time.strftime("%H:%M:%S", time.localtime())
         )
         logging.info("-------------------- Connection Established --------------------")
 
@@ -225,7 +240,7 @@ class MainWindow(QMainWindow):
             return
 
         self.label_initialize_lv5600.setText(
-            "LV5600 Initialized" + time.strftime("%H:%M:%S", time.localtime())
+            "LV5600 Initialized at: " + time.strftime("%H:%M:%S", time.localtime())
         )
         logging.info("-------------------- LV5600 Initialized --------------------")
 
