@@ -26,6 +26,7 @@ from controllers.telnet_controller import TelnetController
 from controllers.waveform_image_analysis_controller import (
     WaveformImageAnalysisController,
 )
+from gui.about_dialog import AboutDialog
 from gui.ftp_settings_dialog import FTPSettingsDialog
 from gui.log_handler import LogHandler
 from gui.resources import resources_rc
@@ -170,7 +171,8 @@ class MainWindow(QMainWindow):
         self.graphicsView.fitInView(pixmap_item)
 
     def setupEvents(self):
-
+        # about
+        self.actionAbout.triggered.connect(self.show_about_dialog)
         # Terminate button
         self.pushButton_terminate.clicked.connect(self.terminate)
 
@@ -199,6 +201,10 @@ class MainWindow(QMainWindow):
     def updateCurrentSettings(self):
         current_settings = self.app_config_handler.get_current_settings()
         self.textBrowser_current_settings.setText(current_settings)
+
+    def show_about_dialog(self):
+        dialog = AboutDialog()
+        dialog.exec_()
 
     @asyncSlot()
     async def terminate(self):
