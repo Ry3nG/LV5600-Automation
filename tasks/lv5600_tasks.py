@@ -12,7 +12,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(SYSCommand.system_initialize())
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error initializing LV5600: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error initializing LV5600: " + str(e))
     
@@ -20,7 +19,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_line_select("ON"))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error enabling waveform line: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error enabling waveform line: " + str(e))
 
@@ -28,7 +26,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_line_number(int(app_config.get_line_number())))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error setting waveform line number: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform line number: " + str(e))
     
@@ -36,7 +33,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_matrix_ycbcr("RGB"))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error setting waveform matrix: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform matrix: " + str(e))
         
@@ -44,7 +40,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("R","OFF"))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error setting waveform mode: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform mode: " + str(e))
         
@@ -52,7 +47,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("G","ON"))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error setting waveform mode: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform mode: " + str(e))
 
@@ -60,7 +54,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("B","OFF"))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error setting waveform mode: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform mode: " + str(e))
         
@@ -68,7 +61,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_cursor("SINGLE"))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error setting waveform cursor: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform cursor: " + str(e))
         
@@ -76,7 +68,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_cursor_height("Y","DELTA",0))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error setting waveform cursor height: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform cursor height: " + str(e))
         
@@ -84,7 +75,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_cursor_height("Y","REF",0))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error setting waveform cursor height: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform cursor height: " + str(e))
         
@@ -92,7 +82,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_cursor_unit("Y","MV"))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error setting waveform cursor unit: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform cursor unit: " + str(e))
 
@@ -100,7 +89,6 @@ class LV5600Tasks:
             response = await telnet_client.send_command(WFMCommand.wfm_cursor_value("ON"))
             logging.debug("The response is " + str(response))
         except Exception as e:
-            logging.error("Error setting waveform cursor value: " + str(e))
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform cursor value: " + str(e))
 
