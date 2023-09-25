@@ -3,6 +3,7 @@ This module provides a class DebugConsoleController that can be used to control 
 """
 from ctypes import c_int, c_ushort, c_wchar_p
 import logging
+from time import sleep
 from controllers.win_input_simulator import WinInputSimulator
 import threading
 
@@ -271,6 +272,7 @@ class DebugConsoleController:
         self.move_and_click(
             self.DELIVERY_INITIAL_SETTING_X, self.DELIVERY_INITIAL_SETTING_Y
         )
+        sleep(2)
         self.move_and_click(self.MASK_SETTING_X, self.MASK_SETTING_Y)
         self.press_key("home")
         num_of_press = 0

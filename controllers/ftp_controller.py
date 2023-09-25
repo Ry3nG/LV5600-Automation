@@ -30,7 +30,6 @@ class FTPController:
             self.ftp = FTP(self.host)
             self.ftp.login(self.username,self.password)
             self.ftp.set_pasv(True) # passive mode means the server initiates the data connection
-            logging.info(f"Connected to FTP server {self.host}")
         except Exception as e:
             logging.error(f"Error while connecting to FTP: {str(e)}")
             raise Exception(f"Error while connecting to FTP: {str(e)}")
