@@ -131,6 +131,13 @@ class AppConfig(QtCore.QObject):
         self.config.set("lv5600", "line_number", str(line_number))
         self.settings_changed.emit()
 
+    def set_target_noise(self, target_noise):
+        self.config.set("constants", "n1_value", str(target_noise))
+        self.settings_changed.emit()
+
+    def get_target_noise(self):
+        return self.config.getfloat("constants", "n1_value")
+    
     def get_current_settings(self):
         current_settings = ""
         current_settings += "Telnet Host: " + self.get_telnet_address() + "\n"
