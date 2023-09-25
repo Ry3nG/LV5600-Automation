@@ -3,7 +3,7 @@ import logging
 import os
 from PyQt5.QtWidgets import QApplication
 from qasync import QEventLoop
-from gui.my_gui import LoginWindow
+from gui.my_gui import MainWindow, LoginWindow
 
 async def main():
     app = QApplication([])
