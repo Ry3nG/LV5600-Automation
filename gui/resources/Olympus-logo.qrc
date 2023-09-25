@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="image">
+    <file>Olympus_Corporation_logo.svg.png</file>
+  </qresource>
+</RCC>
