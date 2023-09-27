@@ -36,18 +36,19 @@ class WaveformImageAnalysisController:
 
         self.classify_waveform_dll = self.myDLL.ClassifyWaveform
         self.classify_waveform_dll.argtypes = [
-            c_char_p,
             c_float,
             c_float,
             c_float,
             c_float,
-            c_int,
-            c_int,
-            c_int,
-            c_int,
+            c_float,
             c_int,
         ]
         self.classify_waveform_dll.restype = c_int
+
+        self.get_current_stdev_dll = self.myDLL.GetCurrentStdev
+        self.get_current_stdev_dll.argtypes = [c_char_p,c_float, c_int, c_int, c_int, c_int, c_int]
+        self.get_current_stdev_dll.restype = c_float
+
 
     def _check_error(self, result):
         if result in self.DLL_error_code:
@@ -88,28 +89,20 @@ class WaveformImageAnalysisController:
 
     def classify_waveform(
         self,
-        image_path,
+        current_mv,
+        current_sd,
         target,
         target_tolerance,
-        flat_pixel_count,
         flat_sd_threshold,
-        roi_x1,
-        roi_x2,
-        roi_y1,
-        roi_y2,
         calculation_type,
     ):
         result = self.classify_waveform_dll(
-            image_path.encode("utf-8"),
+            current_mv,
+            current_sd,
             target,
             target_tolerance,
-            flat_pixel_count,
             flat_sd_threshold,
-            roi_x1,
-            roi_x2,
-            roi_y1,
-            roi_y2,
-            calculation_type,
+            calculation_type
         )
         self._check_error(result)
         return result
@@ -126,3 +119,26 @@ class WaveformImageAnalysisController:
         cursor = mv / CalculationConstants.CURSOR_TO_MV_FACTOR
 
         return mv, cursor
+
+    def get_current_stdev(
+            self,
+            image_path,
+            flat_pixel_count,
+            roi_x1,
+            roi_x2,
+            roi_y1,
+            roi_y2,
+            calculation_type
+    ):
+        result = self.get_current_stdev_dll(
+            image_path.encode("utf-8"),
+            flat_pixel_count,
+            roi_x1,
+            roi_x2,
+            roi_y1,
+            roi_y2,
+            calculation_type
+        )
+        self._check_error(result)
+        # make sure the result is round to 1 decimal place
+        return result
