@@ -21,9 +21,6 @@ class AppConfig(QtCore.QObject):
 
         self.config.read(config_file_path)
 
-        # execute default settings
-        self.set_default_settings()
-
     def get_telnet_address(self):
         return self.config.get("telnet", "host")
 
@@ -177,6 +174,9 @@ class AppConfig(QtCore.QObject):
         self.set_target_tolerance(0.02)
         self.set_target_saturation(763.3)
         self.set_flatness_check_pixel(10.0)
-        self.set_flatness_check_sv_threshold(0.5)
+        self.set_flatness_check_sv_threshold(1.5)
         self.set_line_number(580)
         self.save_config_to_file()
+    
+    def get_version(self):
+        return self.config.get("version", "version")
