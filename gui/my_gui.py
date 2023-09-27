@@ -84,8 +84,17 @@ class MainWindow(QMainWindow):
         self.setupLogging()
         self.setupEvents()
 
+    def getLocalFilePath(self):
+        local_file_path = os.path.join(
+            self.app_config_handler.get_local_file_path(),
+            FTPConstants.LOCAL_FILE_NAME_BMP,
+        )
+        return local_file_path
+
     def setupUI(self):
         self.loadUIFile("LV5600-Automation-OCB-GUI-2.0.ui")
+        # set title
+        self.setWindowTitle("LV5600-OCB-Automation-tool" + " V"+ str(self.app_config_handler.get_version()))
         self.setupToolBoxView()
         self.setupWelcomeImage()
         self.updateCurrentSettings()
@@ -187,6 +196,9 @@ class MainWindow(QMainWindow):
         self.pushButton_edit_line_number.clicked.connect(self.editLineNumber)
 
         self.app_config_handler.settings_changed.connect(self.updateCurrentSettings)
+        self.pushButton_load_default_settings.clicked.connect(
+            self.app_config_handler.set_default_settings
+        )
 
         # Page 2 - OCB Control
         self.pushButton_deliver_mask_mode.clicked.connect(self.deliverMaskMode)
@@ -194,7 +206,7 @@ class MainWindow(QMainWindow):
         self.pushButton_deliver_light_level.clicked.connect(self.deliverLightLevel)
 
         # Page 3 - Dynamic Range Automation
-        self.pushButton_capture_sat_value.clicked.connect(self.captureSatValue)
+        # self.pushButton_capture_sat_value.clicked.connect(self.captureSatValue)
         self.pushButton_classify_sat.clicked.connect(self.classifySat)
         self.pushButton_set_sat.clicked.connect(self.setSat)
 
@@ -222,7 +234,9 @@ class MainWindow(QMainWindow):
             logging.error(f"Error while closing FTP connection: {str(e)}")
 
         self.debug_console_controller.stop_tasks()
-        self.label_establish_connection.setText("Telnet Disconnected at: " + time.strftime("%H:%M:%S", time.localtime()))
+        self.label_establish_connection.setText(
+            "Telnet Disconnected at: " + time.strftime("%H:%M:%S", time.localtime())
+        )
 
     @asyncSlot()
     @time_it_async
@@ -332,40 +346,56 @@ class MainWindow(QMainWindow):
 
     @asyncSlot()
     async def capture_image_to_local(self):
-        local_file_path = os.path.join(
-            self.app_config_handler.get_local_file_path(),
-            FTPConstants.LOCAL_FILE_NAME_BMP,
-        )
         with FTPSession(self.ftp_client) as ftp_client:
+            # turn off scale and cursor
+            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, False)
             await LV5600Tasks.capture_n_send_bmp(
-                self.telnet_clinet, ftp_client, local_file_path
+                self.telnet_clinet, ftp_client, self.getLocalFilePath()
             )
-        return local_file_path
+            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True)
 
     @asyncSlot()
-    async def compute_average_mv(self, mode, num_sample=3):
+    async def compute_average_mv_sd(self, mode, num_sample=3):
         total_mv = 0
+        total_sd = 0
         for i in range(num_sample):
-            logging.info(f"Capturing Image {i+1} of {num_sample}")
-            local_file_path = await self.capture_image_to_local()
-            self.display_image(local_file_path)
+            await self.capture_image_to_local()
+            self.display_image(self.getLocalFilePath())
             mv, cursor = self.wfm_image_analysis_controller.compute_mv_cursor(
-                local_file_path, mode
+                self.getLocalFilePath(), mode
             )
-            logging.info(f"Current mV: {mv} mV")
+
+            flat_pixel_count = self.app_config_handler.get_flatness_check_pixel()
+            sd = self.wfm_image_analysis_controller.get_current_stdev(
+                self.getLocalFilePath(),
+                flat_pixel_count,
+                CalculationConstants.ROI_COORDINATES_X1,
+                CalculationConstants.ROI_COORDINATES_X2,
+                CalculationConstants.ROI_COORDINATES_Y1,
+                CalculationConstants.ROI_COORDINATES_Y2,
+                mode,
+            )
+
             total_mv += mv
-        res_mv = round(total_mv / num_sample, 1) # 76.18222->76.18
+            total_sd += sd
+
+        res_mv = round(total_mv / num_sample, 1)
+        res_sd = round(total_sd / num_sample, 4)
         res_cursor = res_mv / CalculationConstants.CURSOR_TO_MV_FACTOR
-        return res_mv, res_cursor
+
+        logging.info(f"Average mV Value for current waveform: {res_mv} mV")
+        logging.info(f"Average Standard Deviation of mid pixels: {res_sd} ")
+
+        return res_mv, res_cursor, res_sd
 
     @asyncSlot()
     @time_it_async
-    async def captureSatValue(self):
+    async def capture_sat_value(self):
         logging.info("-------------------- Capturing Saturation --------------------")
         self.debug_console_controller.set_light_level(200)
-        local_file_path = await self.capture_image_to_local()
+        await self.capture_image_to_local()
         mv, cursor = self.wfm_image_analysis_controller.compute_mv_cursor(
-            local_file_path, CalculationConstants.SAT_MODE
+            self.getLocalFilePath(), CalculationConstants.SAT_MODE
         )
 
         self.app_config_handler.set_target_saturation(mv)
@@ -376,7 +406,7 @@ class MainWindow(QMainWindow):
 
         # display the image on the GUI
 
-        self.display_image(local_file_path)
+        self.display_image(self.getLocalFilePath())
 
         logging.info(f"Saturation Value: {mv} mV")
         self.lcdNumber_sat_target_value.display(mv)
@@ -390,26 +420,17 @@ class MainWindow(QMainWindow):
     async def classifySat(self):
         # capture an image and classify it
         logging.info("-------------------- Classifying Saturation --------------------")
-        mv, cursor = await self.compute_average_mv(CalculationConstants.SAT_MODE, 5)
-        logging.info("Current mV: " + str(mv) + " mV")
-        local_file_path = os.path.join(
-            self.app_config_handler.get_local_file_path(),
-            FTPConstants.LOCAL_FILE_NAME_BMP,
-        )
+        mv, cursor, sd = await self.compute_average_mv_sd(CalculationConstants.SAT_MODE)
+
         target = self.app_config_handler.get_target_saturation()
         tolerance = self.app_config_handler.get_target_tolerance()
-        flat_pixel_count = self.app_config_handler.get_flatness_check_pixel()
         flat_sv_threshold = self.app_config_handler.get_flatness_check_sv_threshold()
         class_ = self.wfm_image_analysis_controller.classify_waveform(
-            local_file_path,
+            mv,
+            sd,
             target,
             tolerance,
-            flat_pixel_count,
             flat_sv_threshold,
-            CalculationConstants.ROI_COORDINATES_X1,
-            CalculationConstants.ROI_COORDINATES_X2,
-            CalculationConstants.ROI_COORDINATES_Y1,
-            CalculationConstants.ROI_COORDINATES_Y2,
             CalculationConstants.SAT_MODE,
         )
         if class_ == 0:
@@ -425,11 +446,11 @@ class MainWindow(QMainWindow):
         # turn on scale and cursor
         await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
         # display the image on the GUI
-        self.display_image(local_file_path)
+        await LV5600Tasks.capture_n_send_bmp(
+            self.telnet_clinet, self.ftp_client, self.getLocalFilePath()
+        )
+        self.display_image(self.getLocalFilePath())
         logging.info("Current waveform is: " + class_)
-
-        # pop up:
-        QMessageBox.information(self, "Classification Result", class_)
         logging.info(
             "-------------------- Saturation Value Classified --------------------"
         )
@@ -437,9 +458,11 @@ class MainWindow(QMainWindow):
     @asyncSlot()
     @time_it_async
     async def setSat(self):
+        await self.capture_sat_value()
         logging.info("-------------------- Setting Saturation --------------------")
         self.debug_console_controller.reset_light_level()
         time.sleep(1)
+        final_mv = 0
 
         light_level_upper_bound = 256
         light_level_lower_bound = 0
@@ -447,7 +470,6 @@ class MainWindow(QMainWindow):
 
         target = self.app_config_handler.get_target_saturation()
         tolerance = self.app_config_handler.get_target_tolerance()
-        flat_pixel_count = self.app_config_handler.get_flatness_check_pixel()
         flat_sv_threshold = self.app_config_handler.get_flatness_check_sv_threshold()
 
         while light_level_lower_bound < light_level_upper_bound:
@@ -461,7 +483,7 @@ class MainWindow(QMainWindow):
                     f"Light Level {middle_light_level} has been checked before"
                 )
                 logging.info("Handing over to precision mode")
-                await self.adjust_light_level_precisely(
+                final_mv = await self.adjust_light_level_precisely(
                     CalculationConstants.SAT_MODE, middle_light_level, target
                 )
                 break
@@ -472,52 +494,58 @@ class MainWindow(QMainWindow):
 
             # Using average mv computation when the difference is less than or equal to 4
             if light_level_upper_bound - light_level_lower_bound <= 8:
-                mv, cursor = await self.compute_average_mv(
+                mv, cursor, sd = await self.compute_average_mv_sd(
                     CalculationConstants.SAT_MODE
                 )
             else:
-                local_file_path = await self.capture_image_to_local()
-                self.display_image(local_file_path)
-                mv, cursor = self.wfm_image_analysis_controller.compute_mv_cursor(
-                    local_file_path, CalculationConstants.SAT_MODE
+                await self.capture_image_to_local()
+                self.display_image(self.getLocalFilePath())
+                mv, cursor, sd = await self.compute_average_mv_sd(
+                    CalculationConstants.SAT_MODE, 1
                 )
+
+            final_mv = mv
             await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
             class_ = self.wfm_image_analysis_controller.classify_waveform(
-                local_file_path,
+                mv,
+                sd,
                 target,
                 tolerance,
-                flat_pixel_count,
                 flat_sv_threshold,
-                CalculationConstants.ROI_COORDINATES_X1,
-                CalculationConstants.ROI_COORDINATES_X2,
-                CalculationConstants.ROI_COORDINATES_Y1,
-                CalculationConstants.ROI_COORDINATES_Y2,
                 CalculationConstants.SAT_MODE,
             )
 
             checked_light_levels.add(middle_light_level)
+            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
 
             if class_ == 0:  # over saturated
                 light_level_upper_bound = middle_light_level
             elif class_ == 1:
                 light_level_lower_bound = middle_light_level
             elif class_ == 2:
-                local_file_path = await self.capture_image_to_local()
-                self.display_image(local_file_path)
+                await self.capture_image_to_local()
+                self.display_image(self.getLocalFilePath())
                 break
 
+        await LV5600Tasks.scale_and_cursor(
+            self.telnet_clinet,
+            True,
+            final_mv / CalculationConstants.CURSOR_TO_MV_FACTOR,
+        )
+        await LV5600Tasks.capture_n_send_bmp(
+            self.telnet_clinet, self.ftp_client, self.getLocalFilePath()
+        )
+        self.display_image(self.getLocalFilePath())
         logging.info("-------------------- Saturation Value Set --------------------")
 
     @asyncSlot()
     @time_it_async
     async def captureN1(self):
         logging.info("-------------------- Capturing N1 Value --------------------")
-        local_file_path = os.path.join(
-            self.app_config_handler.get_local_file_path(),
-            FTPConstants.LOCAL_FILE_NAME_BMP,
-        )
 
-        mv, cursor = await self.compute_average_mv(CalculationConstants.NOISE_MODE, 5)
+        mv, cursor, sd = await self.compute_average_mv_sd(
+            CalculationConstants.NOISE_MODE
+        )
 
         self.app_config_handler.set_target_noise(mv)
         self.app_config_handler.save_config_to_file()
@@ -526,7 +554,7 @@ class MainWindow(QMainWindow):
         await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
 
         # display the image on the GUI
-        self.display_image(local_file_path)
+        self.display_image(self.getLocalFilePath())
 
         logging.info(f"N1 Value: {mv} mV")
         self.lcdNumber_n1value.display(mv)
@@ -548,7 +576,6 @@ class MainWindow(QMainWindow):
 
         target = self.app_config_handler.get_target_noise() + offset
         tolerance = self.app_config_handler.get_target_tolerance()
-        flat_pixel_count = self.app_config_handler.get_flatness_check_pixel()
         flat_sv_threshold = self.app_config_handler.get_flatness_check_sv_threshold()
 
         final_mv = 0
@@ -574,40 +601,37 @@ class MainWindow(QMainWindow):
             logging.info(f"Current Light Level: {middle_light_level}")
 
             if light_level_upper_bound - light_level_lower_bound <= 8:
-                mv, cursor = await self.compute_average_mv(
+                mv, cursor, sd = await self.compute_average_mv_sd(
                     CalculationConstants.NOISE_MODE
                 )
             else:
-                local_file_path = await self.capture_image_to_local()
-                self.display_image(local_file_path)
-                mv, cursor = self.wfm_image_analysis_controller.compute_mv_cursor(
-                    local_file_path, CalculationConstants.NOISE_MODE
+                await self.capture_image_to_local()
+                self.display_image(self.getLocalFilePath())
+                mv, cursor, sd = await self.compute_average_mv_sd(
+                    CalculationConstants.NOISE_MODE, 1
                 )
 
             final_mv = mv
             await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
             class_ = self.wfm_image_analysis_controller.classify_waveform(
-                local_file_path,
+                mv,
+                sd,
                 target,
                 tolerance,
-                flat_pixel_count,
                 flat_sv_threshold,
-                CalculationConstants.ROI_COORDINATES_X1,
-                CalculationConstants.ROI_COORDINATES_X2,
-                CalculationConstants.ROI_COORDINATES_Y1,
-                CalculationConstants.ROI_COORDINATES_Y2,
                 CalculationConstants.NOISE_MODE,
             )
 
             checked_light_levels.add(middle_light_level)
+            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
 
             if class_ == 0:
                 light_level_upper_bound = middle_light_level
             elif class_ == 1:
                 light_level_lower_bound = middle_light_level
             elif class_ == 2:
-                local_file_path = await self.capture_image_to_local()
-                self.display_image(local_file_path)
+                await self.capture_image_to_local()
+                self.display_image(self.getLocalFilePath())
                 break
 
         if offset > 0:
@@ -617,6 +641,15 @@ class MainWindow(QMainWindow):
         else:
             self.lcdNumber_n1value.display(final_mv)
 
+        await LV5600Tasks.scale_and_cursor(
+            self.telnet_clinet,
+            True,
+            final_mv / CalculationConstants.CURSOR_TO_MV_FACTOR,
+        )
+        await LV5600Tasks.capture_n_send_bmp(
+            self.telnet_clinet, self.ftp_client, self.getLocalFilePath()
+        )
+        self.display_image(self.getLocalFilePath())
         logging.info("-------------------- Noise Value Set --------------------")
 
     @asyncSlot()
@@ -625,17 +658,12 @@ class MainWindow(QMainWindow):
         logging.debug("Target: " + str(target) + " mV")
         logging.debug("Current Light Level: " + str(current_light_level))
 
-
         checked_light_levels = set()
         differences = {}
 
         tolerance = self.app_config_handler.get_target_tolerance()
         flat_pixel_count = self.app_config_handler.get_flatness_check_pixel()
         flat_sv_threshold = self.app_config_handler.get_flatness_check_sv_threshold()
-        local_file_path = os.path.join(
-            self.app_config_handler.get_local_file_path(),
-            FTPConstants.LOCAL_FILE_NAME_BMP,
-        )
 
         final_mv = 0
 
@@ -643,7 +671,7 @@ class MainWindow(QMainWindow):
             self.debug_console_controller.set_light_level(current_light_level)
 
             # use averaging
-            mv, cursor = await self.compute_average_mv(mode)
+            mv, cursor, sd = await self.compute_average_mv_sd(mode)
             difference_from_target = mv - target
             differences[current_light_level] = difference_from_target
             final_mv = mv
@@ -667,13 +695,16 @@ class MainWindow(QMainWindow):
                 # message for dialog box to whether increase or decrease the target distance
                 # need to check the difference is positive or negative
                 if differences[closest_level] < 0:
-                    message = f"Current light level is too low. The closest level is {closest_level}. The difference is {differences[closest_level]} mV. Move the scope closer to the target?"
+                    message = f"Current light level is too low. The closest level is {closest_level}. The difference is {round(differences[closest_level],2)} mV. Move the scope closer to the target?"
                     # turn on scale and cursor
                 else:
-                    message = f"Current light level is too high. The closest level is {closest_level}. The difference is {differences[closest_level]} mV. Move the scope further away from the target?"
+                    message = f"Current light level is too high. The closest level is {closest_level}. The difference is {round(differences[closest_level],2)} mV. Move the scope further away from the target?"
 
-
-                await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+                await LV5600Tasks.scale_and_cursor(
+                    self.telnet_clinet,
+                    True,
+                    target / CalculationConstants.CURSOR_TO_MV_FACTOR,
+                )
                 # pop-up
                 reply = QMessageBox.question(
                     self,
@@ -692,16 +723,7 @@ class MainWindow(QMainWindow):
                     break
 
             class_ = self.wfm_image_analysis_controller.classify_waveform(
-                local_file_path,
-                target,
-                tolerance,
-                flat_pixel_count,
-                flat_sv_threshold,
-                CalculationConstants.ROI_COORDINATES_X1,
-                CalculationConstants.ROI_COORDINATES_X2,
-                CalculationConstants.ROI_COORDINATES_Y1,
-                CalculationConstants.ROI_COORDINATES_Y2,
-                mode,
+                mv, sd, target, tolerance, flat_sv_threshold, mode
             )
 
             # add the current light level to the checked set
