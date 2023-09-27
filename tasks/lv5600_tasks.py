@@ -96,9 +96,6 @@ class LV5600Tasks:
     @staticmethod
     async def capture_n_send_bmp(telnet_client,ftp_client,file_path) -> bool:
         response = None
-        # first we turn off scale and cursor
-        await LV5600Tasks.scale_and_cursor(telnet_client,False)
-
         # capture
         try:
             response = await telnet_client.send_command(CaptureCommand.take_snapshot())
