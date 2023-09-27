@@ -272,7 +272,7 @@ class DebugConsoleController:
         self.move_and_click(
             self.DELIVERY_INITIAL_SETTING_X, self.DELIVERY_INITIAL_SETTING_Y
         )
-        sleep(2)
+        sleep(1.5)
         self.move_and_click(self.MASK_SETTING_X, self.MASK_SETTING_Y)
         self.press_key("home")
         num_of_press = 0
