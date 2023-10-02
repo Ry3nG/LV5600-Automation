@@ -94,7 +94,11 @@ class MainWindow(QMainWindow):
     def setupUI(self):
         self.loadUIFile("LV5600-Automation-OCB-GUI-2.0.ui")
         # set title
-        self.setWindowTitle("LV5600-OCB-Automation-tool" + " V"+ str(self.app_config_handler.get_version()))
+        self.setWindowTitle(
+            "LV5600-OCB-Automation-tool"
+            + " V"
+            + str(self.app_config_handler.get_version())
+        )
         self.setupToolBoxView()
         self.setupWelcomeImage()
         self.updateCurrentSettings()
@@ -461,8 +465,6 @@ class MainWindow(QMainWindow):
     async def setSat(self):
         await self.capture_sat_value()
         logging.info("-------------------- Setting Saturation --------------------")
-        self.debug_console_controller.reset_light_level()
-        time.sleep(1)
         final_mv = 0
 
         light_level_upper_bound = 256
@@ -568,8 +570,6 @@ class MainWindow(QMainWindow):
     @time_it_async
     async def setNoiseValue(self, offset):
         logging.info("-------------------- Setting Noise Value --------------------")
-        self.debug_console_controller.reset_light_level()
-        time.sleep(1)
 
         light_level_upper_bound = 256
         light_level_lower_bound = 0
