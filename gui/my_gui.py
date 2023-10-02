@@ -357,7 +357,7 @@ class MainWindow(QMainWindow):
     @asyncSlot()
     async def compute_average_mv_sd(self, mode, num_sample=3):
         total_mv = 0
-        total_sd = 0
+        max_sd = 0
         for i in range(num_sample):
             await self.capture_image_to_local()
             self.display_image(self.getLocalFilePath())
@@ -377,14 +377,15 @@ class MainWindow(QMainWindow):
             )
 
             total_mv += mv
-            total_sd += sd
+            if sd > max_sd:
+                max_sd = sd
 
         res_mv = round(total_mv / num_sample, 1)
-        res_sd = round(total_sd / num_sample, 4)
+        res_sd = max_sd
         res_cursor = res_mv / CalculationConstants.CURSOR_TO_MV_FACTOR
 
         logging.info(f"Average mV Value for current waveform: {res_mv} mV")
-        logging.info(f"Average Standard Deviation of mid pixels: {res_sd} ")
+        logging.info(f"Maximum Standard Deviation of mid pixels: {res_sd} ")
 
         return res_mv, res_cursor, res_sd
 
