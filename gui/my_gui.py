@@ -136,9 +136,11 @@ class MainWindow(QMainWindow):
             self.app_config_handler.get_ftp_password(),
         )
 
+        
+        self.wfm_image_analysis_controller = WaveformImageAnalysisController()
+
         self.debug_console_controller = DebugConsoleController()
 
-        self.wfm_image_analysis_controller = WaveformImageAnalysisController()
 
     def setupLogging(self):
         self.log_handler = LogHandler(self.textBrowser_console)
