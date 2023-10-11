@@ -103,11 +103,11 @@ class MyGUI(QMainWindow):
             self.app_config.get_ftp_username(),
             self.app_config.get_ftp_password(),
         )
+        self.waveform_image_analysis_controller = WaveformImageAnalysisController()
 
         self.debug_console_controller = DebugConsoleController()
 
-        self.waveform_image_analysis_controller = WaveformImageAnalysisController()
-
+       
         self.wb_n1_value = -1
 
         # initialize the log handler
