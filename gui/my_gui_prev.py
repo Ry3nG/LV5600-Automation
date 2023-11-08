@@ -34,6 +34,7 @@ from controllers.waveform_image_analysis_controller import (
 from config.application_config import AppConfig
 
 from gui.about_dialog import AboutDialog
+from gui.target_tolerance_dialog import TargetToleranceDialog
 from gui.telnet_settings_dialog import TelnetSettingsDialog
 from gui.ftp_settings_dialog import FTPSettingsDialog
 from gui.log_handler import LogHandler
@@ -89,6 +90,9 @@ class MyGUI(QMainWindow):
         # initiaize the application config
         self.app_config = AppConfig()
 
+        # load default values from config file
+        self.app_config.set_default_settings()
+
         self.dialog_handler = DialogHandler()
 
         # initialize the Telnet and FTP clients with values from the config
@@ -135,7 +139,6 @@ class MyGUI(QMainWindow):
             QAction, "actionEdit_Saturation_Target_mV"
         )
         self.actionEdit_Saturation_Target_mV.triggered.connect(self.open_saturation_target_dialog)  # type: ignore
-        self.actionEdit_Oversaturate_Threshold.triggered.connect(self.open_oversaturate_threshold_dialog)  # type: ignore
         self.actionEdit_Line_Number.triggered.connect(self.open_line_number_dialog)  # type: ignore
         self.actionAbout.triggered.connect(self.show_about_dialog)  # type: ignore
         self.pushButton_login.clicked.connect(self.login)
@@ -231,13 +234,8 @@ class MyGUI(QMainWindow):
             self.app_config.save_config_to_file()
 
     def open_target_tolerance_dialog(self):
-        # let the user select a target tolerance and write back to the config file
-        target_tolerance, ok = QInputDialog.getDouble(
-            self, "Target Tolerance", "Enter Target Tolerance", 0.01, 0.0, 100.0, 3
-        )
-        if ok:
-            self.app_config.set_target_tolerance(target_tolerance)
-            self.app_config.save_config_to_file()
+        self.target_tolerance_dialog = TargetToleranceDialog(self.app_config)
+        self.target_tolerance_dialog.exec_()
 
     def open_saturation_target_dialog(self):
         # let the user select a saturation target and write back to the config file
@@ -246,22 +244,6 @@ class MyGUI(QMainWindow):
         )
         if ok:
             self.app_config.set_target_saturation(saturation_target)
-            self.app_config.save_config_to_file()
-
-    def open_oversaturate_threshold_dialog(self):
-        description = "This is the number of pixels to check whether the image is flat or not, determine its saturation status."
-        QMessageBox.information(self, "Oversaturated Threshold", description)
-        oversaturated_threshold, ok = QInputDialog.getDouble(
-            self,
-            "Oversaturated Threshold",
-            "Enter Oversaturated Threshold",
-            20.0,
-            10.0,
-            100.0,
-            1,
-        )
-        if ok:
-            self.app_config.set_flatness_check_threshold(oversaturated_threshold)
             self.app_config.save_config_to_file()
 
     def open_line_number_dialog(self):
@@ -378,7 +360,7 @@ class MyGUI(QMainWindow):
             return
 
     @asyncSlot()
-    async def clicked_capture_n_send_bmp(self, mode=CalculationConstants.SAT_MODE, message=None):
+    async def clicked_capture_n_send_bmp(self, mode=CalculationConstants.NOISE_MODE, message=None): #CHANGED TO NOISE_MODE
         logging.info(
             "-------------------- Capturing and sending BMP --------------------"
         )
@@ -395,6 +377,9 @@ class MyGUI(QMainWindow):
                 mv, cursor = self.waveform_image_analysis_controller.compute_mv_cursor(
                     local_file_path, mode
                 )
+
+                # put the cursor on the waveform
+                await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
                 # display in graphics view
                 pixmap = QPixmap(local_file_path)
                 if message == None:
@@ -427,8 +412,8 @@ class MyGUI(QMainWindow):
                 self.telnet_client, ftp_client, local_file_path
             )
             mv, cursor = self.waveform_image_analysis_controller.compute_mv_cursor(
-                self.getLocalFilePath(), CalculationConstants.SAT_MODE
-            )
+                self.getLocalFilePath(), CalculationConstants.NOISE_MODE
+            ) # CHANGED TO NOISE MODE
             self.app_config.set_target_saturation(mv)
             self.app_config.save_config_to_file()
             # put the cursor on the target saturation
@@ -444,7 +429,7 @@ class MyGUI(QMainWindow):
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
         )
-        mv, cursor, sd = await self.compute_average_mv_sd(CalculationConstants.SAT_MODE)
+        mv, cursor, sd = await self.compute_average_mv_sd(CalculationConstants.NOISE_MODE) # changed to noise mode
         target = self.app_config.get_target_saturation()
         tolerance = self.app_config.get_target_tolerance()
         flat_sv_threshold = self.app_config.get_flatness_check_sv_threshold()
@@ -454,8 +439,12 @@ class MyGUI(QMainWindow):
             target,
             tolerance,
             flat_sv_threshold,
-            CalculationConstants.SAT_MODE,
-        )
+            CalculationConstants.NOISE_MODE, 
+        ) #changed to noise mode
+
+        # put the cursor on the waveform
+        await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
+
         if class_ == 0:
             class_ = "Over Saturated"
         elif class_ == 1:
@@ -590,8 +579,8 @@ class MyGUI(QMainWindow):
                 )
                 logging.info("Handing over to precision mode")
                 final_mv = await self.adjust_light_level_precisely(
-                    CalculationConstants.SAT_MODE, middle_light_level, target
-                )
+                    CalculationConstants.NOISE_MODE, middle_light_level, target
+                ) # changed to noise mode
                 break
 
             self.debug_console_controller.set_light_level(middle_light_level)
@@ -601,15 +590,17 @@ class MyGUI(QMainWindow):
             # Using average mv computation when the difference is less than or equal to 4
             if light_level_upper_bound - light_level_lower_bound <= 8:
                 mv, cursor, sd = await self.compute_average_mv_sd(
-                    CalculationConstants.SAT_MODE
+                    CalculationConstants.NOISE_MODE
                 )
             else:
                 mv, cursor, sd = await self.compute_average_mv_sd(
-                    CalculationConstants.SAT_MODE, 1
+                    CalculationConstants.NOISE_MODE, 1
                 )
                 self.display_image_and_title(
                     QPixmap(self.getLocalFilePath()), "Current mV:"+str(mv)
                 )
+
+                # changed to noise mode
                 
 
             final_mv = mv
@@ -620,7 +611,7 @@ class MyGUI(QMainWindow):
                 target,
                 tolerance,
                 flat_sv_threshold,
-                CalculationConstants.SAT_MODE,
+                CalculationConstants.NOISE_MODE,
             )
 
             checked_light_levels.add(middle_light_level)

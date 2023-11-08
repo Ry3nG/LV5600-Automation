@@ -1,3 +1,4 @@
+import logging
 import typing
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDialog, QLineEdit, QPushButton, QVBoxLayout, QLabel, QWidget
@@ -11,6 +12,7 @@ class TargetToleranceDialog(QDialog):
         super(TargetToleranceDialog, self).__init__()
 
         self.app_config = app_config
+        logging.debug("TargetToleranceDialog: app_config: {}".format(self.app_config))
 
         # create widgets, using spinbox 
         self.target_tolerance_spinbox = QtWidgets.QDoubleSpinBox()
@@ -30,6 +32,9 @@ class TargetToleranceDialog(QDialog):
         self.flatness_check_sv_threshold_spinbox.setDecimals(1)
         self.save_button = QPushButton("Save")
         self.cancel_button = QPushButton("Cancel")
+
+        # set title
+        self.setWindowTitle("Target Tolerance Settings")
 
         # Create layout and add widgets
         layout = QVBoxLayout()

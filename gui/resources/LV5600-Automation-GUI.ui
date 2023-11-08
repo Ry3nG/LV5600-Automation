@@ -710,7 +710,7 @@
      </font>
     </property>
     <property name="text">
-     <string>V1.2.1</string>
+     <string>V1.2.3</string>
     </property>
    </widget>
   </widget>
@@ -732,7 +732,6 @@
     <addaction name="actionLocal_File_Path"/>
     <addaction name="actionEdit_target_tolerance"/>
     <addaction name="actionEdit_Saturation_Target_mV"/>
-    <addaction name="actionEdit_Oversaturate_Threshold"/>
     <addaction name="actionEdit_Line_Number"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
@@ -774,7 +773,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Edit target tolerance</string>
+    <string>Edit Target tolerance</string>
    </property>
   </action>
   <action name="actionEdit_Saturation_Target_mV">
