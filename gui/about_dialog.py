@@ -24,7 +24,7 @@ class AboutDialog(QDialog):
         logo_label.setPixmap(logo_pixmap)
         layout.addWidget(logo_label)
 
-        label = QLabel("LV5600-OCB-Automation\n\nDeveloped by: Olympus Singapore Pte Ltd\n\nVersion: 2.2.0")
+        label = QLabel("LV5600-OCB-Automation\n\nDeveloped by: Olympus Singapore Pte Ltd\n\nVersion: 2.2.1")
         layout.addWidget(label)
 
 
