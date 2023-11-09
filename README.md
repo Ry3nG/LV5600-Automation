@@ -53,7 +53,7 @@ Some of the most important files to understand include:
 
 * ``my_gui.py`` located in the **gui** folder: This is where the GUI logic is handled, including button actions and the behavior of other UI elements. This file also includes the core logic of the application, and each of the actions are linked with corresponding tasks or functions in the controller classes.
 
-* ``telnet_controller.py``, ``ftp_controller.py`` and `debug_console_controller.py`` located in the **controllers** folder: These files manage the interactions between the application and external services like Telnet, FTP, and the Debug Console. Changes to how the application interacts with these services would be made here.
+* ``telnet_controller.py``, ``ftp_controller.py`` and ``debug_console_controller.py`` located in the **controllers** folder: These files manage the interactions between the application and external services like Telnet, FTP, and the Debug Console. Changes to how the application interacts with these services would be made here.
 
 * ``lv5600_tasks.py`` and ``calculation_tasks.py`` located in the **tasks** folder: These files define the tasks or actions that the application can perform. If you want to add new functionality to the application, you would likely need to add new tasks here.
 
@@ -62,11 +62,11 @@ Some of the most important files to understand include:
 1. Make sure to have Python 3.7+ installed
 2. Clone the repository
 3. Navigate to the project directory
-4. Start a virtual environment using `python -m venv venv`, then activate it using `.\venv\Scripts\activate ` or `source venv/bin/activate` on Linux
+4. Start a virtual environment using `python -m venv venv`, then activate it using `.\venv\Scripts\activate ` (Windows)
 5. Install the required packages using `pip install -r requirements.txt`
 6. Run the application using `python main.py`
 
 ### Configuration
-The application configuration is stored in `config/config.ini`, it includes default settings for Telnet and FTP Servers, as well as the default path for the snapshot image.
+The application configuration is stored in `config/config.ini`, it includes default settings for Telnet and FTP Servers, the default path for the snapshot image, as well as user-defined parameters.
 
 
