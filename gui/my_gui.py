@@ -517,7 +517,7 @@ class MainWindow(QMainWindow):
                 target,
                 tolerance,
                 flat_sv_threshold,
-                CalculationConstants.NOISE_MODE_MODE,
+                CalculationConstants.NOISE_MODE,
             ) # CHANGED TO SAT MODE
 
             checked_light_levels.add(middle_light_level)
