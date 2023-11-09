@@ -308,7 +308,8 @@ class MainWindow(QMainWindow):
         self.target_tolerance_dialog = TargetToleranceDialog(self.app_config_handler)
         self.target_tolerance_dialog.exec_()
 
-    def editLineNumber(self):
+    @asyncSlot()
+    async def editLineNumber(self):
         current_value = self.app_config_handler.get_line_number()
         current_value = int(current_value)
         line_number, ok = QInputDialog.getInt(
@@ -317,6 +318,7 @@ class MainWindow(QMainWindow):
         if ok:
             self.app_config_handler.set_line_number(line_number)
             self.app_config_handler.save_config_to_file()
+            await self.telnet_client.send_command(line_number)
 
     @time_it_sync
     def deliverMaskMode(self, _=None):
