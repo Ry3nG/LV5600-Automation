@@ -123,7 +123,7 @@ class MainWindow(QMainWindow):
 
     def setupControllers(self):
         self.app_config_handler = AppConfig()
-        self.telnet_clinet = TelnetController(
+        self.telnet_client = TelnetController(
             self.app_config_handler.get_telnet_address(),
             self.app_config_handler.get_telnet_port(),
             self.app_config_handler.get_telnet_username(),
@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         )
 
         if reply == QMessageBox.Yes:
-            self.telnet_clinet.close()
+            self.telnet_client.close()
             self.ftp_client.close()
             event.accept()
         else:
@@ -233,7 +233,7 @@ class MainWindow(QMainWindow):
     @asyncSlot()
     async def terminate(self):
         logging.warning("You have clicked the terminate button")
-        await self.telnet_clinet.close()
+        await self.telnet_client.close()
         try:
             self.ftp_client.close()
         except Exception as e:
@@ -252,7 +252,7 @@ class MainWindow(QMainWindow):
         )
 
         try:
-            await ConnectionTask.connect_to_telnet(self.telnet_clinet)
+            await ConnectionTask.connect_to_telnet(self.telnet_client)
         except Exception as e:
             logging.error(f"Error while establishing connection: {str(e)}")
             return
@@ -267,7 +267,7 @@ class MainWindow(QMainWindow):
     async def initializeLV5600(self):
         logging.info("-------------------- Initializing LV5600 --------------------")
         try:
-            await LV5600Tasks.initialize_lv5600(self.telnet_clinet)
+            await LV5600Tasks.initialize_lv5600(self.telnet_client)
         except Exception as e:
             logging.error(f"Error while initializing LV5600: {str(e)}")
             return
@@ -356,11 +356,11 @@ class MainWindow(QMainWindow):
     async def capture_image_to_local(self):
         with FTPSession(self.ftp_client) as ftp_client:
             # turn off scale and cursor
-            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, False)
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
             await LV5600Tasks.capture_n_send_bmp(
-                self.telnet_clinet, ftp_client, self.getLocalFilePath()
+                self.telnet_client, ftp_client, self.getLocalFilePath()
             )
-            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True)
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, True)
 
     @asyncSlot()
     async def compute_average_mv_sd(self, mode, num_sample=3):
@@ -411,7 +411,7 @@ class MainWindow(QMainWindow):
         self.app_config_handler.save_config_to_file()
 
         # Put the cursor on the waveform
-        await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+        await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
 
         # display the image on the GUI
 
@@ -453,10 +453,10 @@ class MainWindow(QMainWindow):
             class_ = "Unknown"
 
         # turn on scale and cursor
-        await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+        await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
         # display the image on the GUI
         await LV5600Tasks.capture_n_send_bmp(
-            self.telnet_clinet, self.ftp_client, self.getLocalFilePath()
+            self.telnet_client, self.ftp_client, self.getLocalFilePath()
         )
         self.display_image(self.getLocalFilePath())
         logging.info("Current waveform is: " + class_)
@@ -512,7 +512,7 @@ class MainWindow(QMainWindow):
                 ) # CHANGED TO NOISE MODE
 
             final_mv = mv
-            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
             class_ = self.wfm_image_analysis_controller.classify_waveform(
                 mv,
                 sd,
@@ -523,7 +523,7 @@ class MainWindow(QMainWindow):
             ) # CHANGED TO SAT MODE
 
             checked_light_levels.add(middle_light_level)
-            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
 
             if class_ == 0:  # over saturated
                 light_level_upper_bound = middle_light_level
@@ -535,12 +535,12 @@ class MainWindow(QMainWindow):
                 break
 
         await LV5600Tasks.scale_and_cursor(
-            self.telnet_clinet,
+            self.telnet_client,
             True,
             final_mv / CalculationConstants.CURSOR_TO_MV_FACTOR,
         )
         await LV5600Tasks.capture_n_send_bmp(
-            self.telnet_clinet, self.ftp_client, self.getLocalFilePath()
+            self.telnet_client, self.ftp_client, self.getLocalFilePath()
         )
         self.display_image(self.getLocalFilePath())
         logging.info("-------------------- Saturation Value Set --------------------")
@@ -558,7 +558,7 @@ class MainWindow(QMainWindow):
         self.app_config_handler.save_config_to_file()
 
         # Put the cursor on the waveform
-        await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+        await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
 
         # display the image on the GUI
         self.display_image(self.getLocalFilePath())
@@ -617,7 +617,7 @@ class MainWindow(QMainWindow):
                 )
 
             final_mv = mv
-            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
             class_ = self.wfm_image_analysis_controller.classify_waveform(
                 mv,
                 sd,
@@ -628,7 +628,7 @@ class MainWindow(QMainWindow):
             )
 
             checked_light_levels.add(middle_light_level)
-            await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
 
             if class_ == 0:
                 light_level_upper_bound = middle_light_level
@@ -647,12 +647,12 @@ class MainWindow(QMainWindow):
             self.lcdNumber_n1value.display(final_mv)
 
         await LV5600Tasks.scale_and_cursor(
-            self.telnet_clinet,
+            self.telnet_client,
             True,
             final_mv / CalculationConstants.CURSOR_TO_MV_FACTOR,
         )
         await LV5600Tasks.capture_n_send_bmp(
-            self.telnet_clinet, self.ftp_client, self.getLocalFilePath()
+            self.telnet_client, self.ftp_client, self.getLocalFilePath()
         )
         self.display_image(self.getLocalFilePath())
         logging.info("-------------------- Noise Value Set --------------------")
@@ -706,7 +706,7 @@ class MainWindow(QMainWindow):
                     message = f"Current light level is too high. The closest level is {closest_level}. The difference is {round(differences[closest_level],2)} mV. Move the scope further away from the target?"
 
                 await LV5600Tasks.scale_and_cursor(
-                    self.telnet_clinet,
+                    self.telnet_client,
                     True,
                     target / CalculationConstants.CURSOR_TO_MV_FACTOR,
                 )
