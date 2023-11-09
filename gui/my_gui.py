@@ -402,8 +402,8 @@ class MainWindow(QMainWindow):
         self.debug_console_controller.set_light_level(200)
         await self.capture_image_to_local()
         mv, cursor = self.wfm_image_analysis_controller.compute_mv_cursor(
-            self.getLocalFilePath(), CalculationConstants.SAT_MODE
-        )
+            self.getLocalFilePath(), CalculationConstants.NOISE_MODE
+        ) #changed to noise mode
 
         self.app_config_handler.set_target_saturation(mv)
         self.app_config_handler.save_config_to_file()
@@ -427,7 +427,7 @@ class MainWindow(QMainWindow):
     async def classifySat(self):
         # capture an image and classify it
         logging.info("-------------------- Classifying Saturation --------------------")
-        mv, cursor, sd = await self.compute_average_mv_sd(CalculationConstants.SAT_MODE)
+        mv, cursor, sd = await self.compute_average_mv_sd(CalculationConstants.NOISE_MODE) # CHANGED TO NOISE MODE
 
         target = self.app_config_handler.get_target_saturation()
         tolerance = self.app_config_handler.get_target_tolerance()
@@ -438,8 +438,8 @@ class MainWindow(QMainWindow):
             target,
             tolerance,
             flat_sv_threshold,
-            CalculationConstants.SAT_MODE,
-        )
+            CalculationConstants.NOISE_MODE,
+        ) # CHANGED TO NOISE MODE
         if class_ == 0:
             class_ = "Over Saturated"
         elif class_ == 1:
@@ -489,8 +489,8 @@ class MainWindow(QMainWindow):
                 )
                 logging.info("Handing over to precision mode")
                 final_mv = await self.adjust_light_level_precisely(
-                    CalculationConstants.SAT_MODE, middle_light_level, target
-                )
+                    CalculationConstants.NOISE_MODE, middle_light_level, target
+                ) # CHANGED TO NOISE MODE
                 break
 
             self.debug_console_controller.set_light_level(middle_light_level)
@@ -500,14 +500,14 @@ class MainWindow(QMainWindow):
             # Using average mv computation when the difference is less than or equal to 4
             if light_level_upper_bound - light_level_lower_bound <= 8:
                 mv, cursor, sd = await self.compute_average_mv_sd(
-                    CalculationConstants.SAT_MODE
-                )
+                    CalculationConstants.NOISE_MODE
+                ) # CHANGED TO NOISE MODE
             else:
                 await self.capture_image_to_local()
                 self.display_image(self.getLocalFilePath())
                 mv, cursor, sd = await self.compute_average_mv_sd(
-                    CalculationConstants.SAT_MODE, 1
-                )
+                    CalculationConstants.NOISE_MODE, 1
+                ) # CHANGED TO NOISE MODE
 
             final_mv = mv
             await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
@@ -517,8 +517,8 @@ class MainWindow(QMainWindow):
                 target,
                 tolerance,
                 flat_sv_threshold,
-                CalculationConstants.SAT_MODE,
-            )
+                CalculationConstants.NOISE_MODE_MODE,
+            ) # CHANGED TO SAT MODE
 
             checked_light_levels.add(middle_light_level)
             await LV5600Tasks.scale_and_cursor(self.telnet_clinet, True, cursor)
