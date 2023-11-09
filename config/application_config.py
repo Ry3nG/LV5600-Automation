@@ -173,8 +173,8 @@ class AppConfig(QtCore.QObject):
         self.set_local_file_path("C://LV5600-OCB_Automation")
         self.set_target_tolerance(0.02)
         self.set_target_saturation(763.3)
-        self.set_flatness_check_pixel(10.0)
-        self.set_flatness_check_sv_threshold(1.5)
+        self.set_flatness_check_pixel(100)
+        self.set_flatness_check_sv_threshold(1.2)
         self.set_line_number(580)
         self.save_config_to_file()
     
