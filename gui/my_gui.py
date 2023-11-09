@@ -318,7 +318,11 @@ class MainWindow(QMainWindow):
         if ok:
             self.app_config_handler.set_line_number(line_number)
             self.app_config_handler.save_config_to_file()
-            await self.telnet_client.send_command(line_number)
+            try:
+                await self.telnet_client.send_command(line_number)
+            except Exception as e:
+                logging.error(f"Error while sending line number: {str(e)}")
+                return
 
     @time_it_sync
     def deliverMaskMode(self, _=None):
