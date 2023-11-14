@@ -532,7 +532,7 @@ class MyGUI(QMainWindow):
     async def clicked_auto_wb(self):
         logging.info("-------------------- Capturing N1 Value --------------------")
         mv, cursor, sd = await self.compute_average_mv_sd(
-            CalculationConstants.NOISE_MODE
+            CalculationConstants.WHITE_BALANCE_MODE
         )
 
         self.app_config.set_target_noise(mv)
