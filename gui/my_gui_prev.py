@@ -360,7 +360,7 @@ class MyGUI(QMainWindow):
             return
 
     @asyncSlot()
-    async def clicked_capture_n_send_bmp(self, mode=CalculationConstants.NOISE_MODE, message=None): #CHANGED TO NOISE_MODE
+    async def clicked_capture_n_send_bmp(self, mode=CalculationConstants.SAT_MODE, message=None): 
         logging.info(
             "-------------------- Capturing and sending BMP --------------------"
         )
@@ -412,8 +412,8 @@ class MyGUI(QMainWindow):
                 self.telnet_client, ftp_client, local_file_path
             )
             mv, cursor = self.waveform_image_analysis_controller.compute_mv_cursor(
-                self.getLocalFilePath(), CalculationConstants.NOISE_MODE
-            ) # CHANGED TO NOISE MODE
+                self.getLocalFilePath(), CalculationConstants.SAT_MODE
+            ) 
             self.app_config.set_target_saturation(mv)
             self.app_config.save_config_to_file()
             # put the cursor on the target saturation
@@ -429,7 +429,7 @@ class MyGUI(QMainWindow):
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
         )
-        mv, cursor, sd = await self.compute_average_mv_sd(CalculationConstants.NOISE_MODE) # changed to noise mode
+        mv, cursor, sd = await self.compute_average_mv_sd(CalculationConstants.SAT_MODE) 
         target = self.app_config.get_target_saturation()
         tolerance = self.app_config.get_target_tolerance()
         flat_sv_threshold = self.app_config.get_flatness_check_sv_threshold()
@@ -439,8 +439,8 @@ class MyGUI(QMainWindow):
             target,
             tolerance,
             flat_sv_threshold,
-            CalculationConstants.NOISE_MODE, 
-        ) #changed to noise mode
+            CalculationConstants.SAT_MODE, 
+        ) 
 
         # put the cursor on the waveform
         await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
@@ -532,7 +532,7 @@ class MyGUI(QMainWindow):
     async def clicked_auto_wb(self):
         logging.info("-------------------- Capturing N1 Value --------------------")
         mv, cursor, sd = await self.compute_average_mv_sd(
-            CalculationConstants.WHITE_BALANCE_MODE
+            CalculationConstants.NOISE_MODE
         )
 
         self.app_config.set_target_noise(mv)
@@ -579,8 +579,8 @@ class MyGUI(QMainWindow):
                 )
                 logging.info("Handing over to precision mode")
                 final_mv = await self.adjust_light_level_precisely(
-                    CalculationConstants.NOISE_MODE, middle_light_level, target
-                ) # changed to noise mode
+                    CalculationConstants.SAT_MODE, middle_light_level, target
+                ) 
                 break
 
             self.debug_console_controller.set_light_level(middle_light_level)
@@ -590,17 +590,17 @@ class MyGUI(QMainWindow):
             # Using average mv computation when the difference is less than or equal to 4
             if light_level_upper_bound - light_level_lower_bound <= 8:
                 mv, cursor, sd = await self.compute_average_mv_sd(
-                    CalculationConstants.NOISE_MODE
+                    CalculationConstants.SAT_MODE
                 )
             else:
                 mv, cursor, sd = await self.compute_average_mv_sd(
-                    CalculationConstants.NOISE_MODE, 1
+                    CalculationConstants.SAT_MODE, 1
                 )
                 self.display_image_and_title(
                     QPixmap(self.getLocalFilePath()), "Current mV:"+str(mv)
                 )
 
-                # changed to noise mode
+                
                 
 
             final_mv = mv
@@ -611,7 +611,7 @@ class MyGUI(QMainWindow):
                 target,
                 tolerance,
                 flat_sv_threshold,
-                CalculationConstants.NOISE_MODE,
+                CalculationConstants.SAT_MODE,
             )
 
             checked_light_levels.add(middle_light_level)
@@ -668,7 +668,7 @@ class MyGUI(QMainWindow):
                 )
                 logging.info("Handing over to precision mode")
                 final_mv = await self.adjust_light_level_precisely(
-                    CalculationConstants.NOISE_MODE, middle_light_level, target
+                    CalculationConstants.SAT_MODE, middle_light_level, target
                 )
 
                 break
@@ -679,11 +679,11 @@ class MyGUI(QMainWindow):
 
             if light_level_upper_bound - light_level_lower_bound <= 8:
                 mv, cursor, sd = await self.compute_average_mv_sd(
-                    CalculationConstants.NOISE_MODE
+                    CalculationConstants.SAT_MODE
                 )
             else:
                 mv, cursor, sd = await self.compute_average_mv_sd(
-                    CalculationConstants.NOISE_MODE, 1
+                    CalculationConstants.SAT_MODE, 1
                 )
                 self.display_image_and_title(
                     QPixmap(self.getLocalFilePath()), "Current mV: "+ str(mv)
@@ -698,7 +698,7 @@ class MyGUI(QMainWindow):
                 target,
                 tolerance,
                 flat_sv_threshold,
-                CalculationConstants.NOISE_MODE,
+                CalculationConstants.SAT_MODE,
             )
 
             checked_light_levels.add(middle_light_level)

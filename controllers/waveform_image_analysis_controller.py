@@ -24,6 +24,10 @@ class WaveformImageAnalysisController:
         self.get_current_mv_dll.argtypes = [c_char_p, c_int, c_int, c_int, c_int, c_int]
         self.get_current_mv_dll.restype = c_float
 
+        self.get_current_mid_mv_dll = self.myDLL.GetCurrentMidMV
+        self.get_current_mid_mv_dll.argtypes = [c_char_p, c_int, c_int, c_int, c_int, c_int]
+        self.get_current_mv_dll.restype = c_float
+
         self.get_current_cursor_level_dll = self.myDLL.GetCurrentCursorLevel
         self.get_current_cursor_level_dll.argtypes = [
             c_char_p,
@@ -92,15 +96,28 @@ class WaveformImageAnalysisController:
     def get_current_mv(
         self, image_path, calculation_type, roi_x1, roi_x2, roi_y1, roi_y2
     ):
-        result = self.get_current_mv_dll(
-            image_path.encode("utf-8"),
-            roi_x1,
-            roi_x2,
-            roi_y1,
-            roi_y2,
-            calculation_type,
-        )
-        self._check_error(result)
+        if calculation_type == CalculationConstants.NOISE_MODE:
+            result = self.get_current_mid_mv_dll(
+                image_path.encode("utf-8"),
+                roi_x1,
+                roi_x2,
+                roi_y1,
+                roi_y2,
+                calculation_type,
+            )
+            self._check_error(result)
+
+        else:
+
+            result = self.get_current_mv_dll(
+                image_path.encode("utf-8"),
+                roi_x1,
+                roi_x2,
+                roi_y1,
+                roi_y2,
+                calculation_type,
+            )
+            self._check_error(result)
         # make sure the result is round to 1 decimal place
         result = round(result, 1)
         return result
@@ -159,17 +176,8 @@ class WaveformImageAnalysisController:
         return result
 
     def compute_mv_cursor(self, image_path, mode):
-        if mode == CalculationConstants.WHITE_BALANCE_MODE:
-            mv = self.get_current_mv_old(
-                image_path,
-                CalculationConstants.NOISE_MODE,
-                CalculationConstants.ROI_COORDINATES_X1,
-                CalculationConstants.ROI_COORDINATES_X2,
-                CalculationConstants.ROI_COORDINATES_Y1,
-                CalculationConstants.ROI_COORDINATES_Y2,
-            )
-        else:
-            mv = self.get_current_mv(
+        
+        mv = self.get_current_mv(
                 image_path,
                 mode,
                 CalculationConstants.ROI_COORDINATES_X1,
