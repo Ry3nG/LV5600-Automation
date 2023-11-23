@@ -14,8 +14,7 @@ class WaveformImageAnalysisController:
 
     def __init__(self):
         self.myDLL = cdll.LoadLibrary("lib\\WaveformImageAnalysisLib.dll")
-        self.oldDLL = cdll.LoadLibrary("lib\\WaveformImageAnalysisLib_old.dll")
-        if not self.myDLL or not self.oldDLL:
+        if not self.myDLL:
             raise Exception("Could not load DLL")
         else:
             logging.info("Waveform Image Analysis DLL loaded successfully")
@@ -55,36 +54,6 @@ class WaveformImageAnalysisController:
         self.get_current_stdev_dll.restype = c_float
 
         # -------------------------------------------
-        self.get_current_mv_old_dll = self.oldDLL.GetCurrentMV
-        self.get_current_mv_old_dll.argtypes = [c_char_p, c_int, c_int, c_int, c_int, c_int]
-        self.get_current_mv_old_dll.restype = c_float
-
-        self.get_current_cursor_level_old_dll = self.oldDLL.GetCurrentCursorLevel
-        self.get_current_cursor_level_old_dll.argtypes = [
-            c_char_p,
-            c_int,
-            c_int,
-            c_int,
-            c_int,
-            c_int,
-        ]
-        self.get_current_cursor_level_old_dll.restype = c_float
-
-        self.classify_waveform_old_dll = self.oldDLL.ClassifyWaveform
-        self.classify_waveform_old_dll.argtypes = [
-            c_float,
-            c_float,
-            c_float,
-            c_float,
-            c_float,
-            c_int,
-        ]
-        self.classify_waveform_old_dll.restype = c_int
-
-        self.get_current_stdev_old_dll = self.oldDLL.GetCurrentStdev
-        self.get_current_stdev_old_dll.argtypes = [c_char_p,c_float, c_int, c_int, c_int, c_int, c_int]
-        self.get_current_stdev_old_dll.restype = c_float
-
 
 
 
@@ -123,21 +92,6 @@ class WaveformImageAnalysisController:
         return result
 
 
-    def get_current_mv_old(
-        self, image_path, calculation_type, roi_x1, roi_x2, roi_y1, roi_y2
-    ):
-        result = self.get_current_mv_old_dll(
-            image_path.encode("utf-8"),
-            roi_x1,
-            roi_x2,
-            roi_y1,
-            roi_y2,
-            calculation_type,
-        )
-        self._check_error(result)
-        # make sure the result is round to 1 decimal place
-        result = round(result, 1)
-        return result
 
     def get_current_cursor_level(
         self, image_path, calculation_type, roi_x1, roi_x2, roi_y1, roi_y2
@@ -199,18 +153,8 @@ class WaveformImageAnalysisController:
             roi_y2,
             calculation_type
     ):
-        if calculation_type == CalculationConstants.WHITE_BALANCE_MODE:
-            result = self.get_current_stdev_old_dll(
-                image_path.encode("utf-8"),
-                flat_pixel_count,
-                roi_x1,
-                roi_x2,
-                roi_y1,
-                roi_y2,
-                CalculationConstants.NOISE_MODE
-            )
-        else:
-            result = self.get_current_stdev_dll(
+        
+        result = self.get_current_stdev_dll(
                 image_path.encode("utf-8"),
                 flat_pixel_count,
                 roi_x1,
