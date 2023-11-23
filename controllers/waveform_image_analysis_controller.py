@@ -82,7 +82,7 @@ class WaveformImageAnalysisController:
             result = self.get_current_mid_mv_dll(
                 image_path.encode("utf-8"),
                 calculation_type,
-                roi_x1,
+                roi_x1+400,
                 roi_x2,
                 roi_y1,
                 roi_y2,

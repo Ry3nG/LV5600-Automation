@@ -92,6 +92,33 @@ class LV5600Tasks:
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform cursor value: " + str(e))
 
+    @staticmethod
+    async def rgb_on(telnet_client):
+        response = None
+        try:
+            response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("R","ON"))
+            logging.debug("The response is " + str(response))
+            response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("G","ON"))
+            logging.debug("The response is " + str(response))
+            response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("B","ON"))
+            logging.debug("The response is " + str(response))
+        except Exception as e:
+            logging.debug("The response is " + str(response))
+            raise Exception("Error setting waveform mode: " + str(e))
+        
+    @staticmethod   
+    async def rgb_only_green(telnet_client):
+        response = None
+        try:
+            response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("R","OFF"))
+            logging.debug("The response is " + str(response))
+            response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("G","ON"))
+            logging.debug("The response is " + str(response))
+            response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("B","OFF"))
+            logging.debug("The response is " + str(response))
+        except Exception as e:
+            logging.debug("The response is " + str(response))
+            raise Exception("Error setting waveform mode: " + str(e))
         
     @staticmethod
     async def capture_n_send_bmp(telnet_client,ftp_client,file_path) -> bool:

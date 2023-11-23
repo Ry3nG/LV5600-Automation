@@ -402,6 +402,7 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_capture_sat_value(self):
+        await LV5600Tasks.rgb_on(self.telnet_client)
         self.debug_console_controller.activate()
         self.debug_console_controller.set_light_level(200)
         local_file_path = os.path.join(
@@ -425,6 +426,7 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_capture_n_classify(self, mode="SAT", message=None):
+        await LV5600Tasks.rgb_on(self.telnet_client)
         logging.info("Capturing and classifying SAT")
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
@@ -530,6 +532,7 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_auto_wb(self):
+        await LV5600Tasks.rgb_only_green(self.telnet_client)
         logging.info("-------------------- Capturing N1 Value --------------------")
         mv, cursor, sd = await self.compute_average_mv_sd(
             CalculationConstants.NOISE_MODE
@@ -555,6 +558,7 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_auto_adjust_sat(self):
+        await LV5600Tasks.rgb_on(self.telnet_client)
         await self.clicked_capture_sat_value()
         logging.info("-------------------- Auto Adjust Saturation --------------------")
         final_mv = 0
@@ -645,6 +649,7 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_auto_adjust_noise(self, offset):
+        await LV5600Tasks.rgb_only_green(self.telnet_client)
         logging.info("-------------------- Setting Noise Value --------------------")
 
         light_level_upper_bound = 256
