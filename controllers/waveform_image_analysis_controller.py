@@ -23,6 +23,7 @@ class WaveformImageAnalysisController:
         self.get_current_mv_dll.argtypes = [c_char_p, c_int, c_int, c_int, c_int, c_int]
         self.get_current_mv_dll.restype = c_float
 
+        
         self.get_current_mid_mv_dll = self.myDLL.GetCurrentMidMV
         self.get_current_mid_mv_dll.argtypes = [
             c_char_p,
@@ -33,7 +34,7 @@ class WaveformImageAnalysisController:
             c_int,
         ]
         self.get_current_mid_mv_dll.restype = c_float
-
+        
         self.get_current_cursor_level_dll = self.myDLL.GetCurrentCursorLevel
         self.get_current_cursor_level_dll.argtypes = [
             c_char_p,

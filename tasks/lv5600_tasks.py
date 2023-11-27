@@ -1,3 +1,4 @@
+from time import sleep
 from commands.command_utils import CaptureCommand, InputCommand, PresetCommand,SYSCommand,WFMCommand
 import logging
 import Constants
@@ -102,6 +103,40 @@ class LV5600Tasks:
             logging.debug("The response is " + str(response))
             response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("B","ON"))
             logging.debug("The response is " + str(response))
+        except Exception as e:
+            logging.debug("The response is " + str(response))
+            raise Exception("Error setting waveform mode: " + str(e))
+        
+    @staticmethod
+    async def rgb_change(telnet_client, color):
+        # 0 is red, 1 is green, 2 is blue
+        response = None
+        try:
+            if color == 0:
+                response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("R","ON"))
+                logging.debug("The response is " + str(response))
+                response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("G","OFF"))
+                logging.debug("The response is " + str(response))
+                response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("B","OFF"))
+                logging.debug("The response is " + str(response))
+            elif color == 1:
+                
+                response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("G","ON"))
+                logging.debug("The response is " + str(response))
+                response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("B","OFF"))
+                logging.debug("The response is " + str(response))
+                response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("R","OFF"))
+                logging.debug("The response is " + str(response))
+            elif color == 2:
+                response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("B","ON"))
+                logging.debug("The response is " + str(response))
+                response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("R","OFF"))
+                logging.debug("The response is " + str(response))
+                response = await telnet_client.send_command(WFMCommand.wfm_mode_rgb("G","OFF"))
+                logging.debug("The response is " + str(response))
+                
+            
+            
         except Exception as e:
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform mode: " + str(e))
