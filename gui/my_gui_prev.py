@@ -697,6 +697,16 @@ class MyGUI(QMainWindow):
                 )
         
         await LV5600Tasks.rgb_on(self.telnet_client)
+
+        # capture a new image as result
+        with FTPSession(self.ftp_client) as ftp_client:
+            await LV5600Tasks.capture_n_send_bmp(
+                self.telnet_client, ftp_client, self.getLocalFilePath()
+            )
+        # display in graphics view
+        pixmap = QPixmap(self.getLocalFilePath())
+        self.display_image_and_title(pixmap, "Just Saturated")
+
         logging.info(
             "-------------------- Auto Adjust Saturation Done --------------------"
         )
