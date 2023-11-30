@@ -402,83 +402,33 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_capture_sat_value(self):
-        await LV5600Tasks.rgb_on(self.telnet_client)
         self.debug_console_controller.activate()
         self.debug_console_controller.set_light_level(200)
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
         )
-
-        highest_mv = 0
-        highest_cursor = 0
-        highest_channel = 0
-
-        # turn off scale and cursor
-        await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
-        # loop through R G B
-        for i in range(3):
-            await LV5600Tasks.rgb_change(self.telnet_client, i)
-            with FTPSession(self.ftp_client) as ftp_client:
-                await LV5600Tasks.capture_n_send_bmp(
-                    self.telnet_client, ftp_client, local_file_path
-                )
-                mv, cursor = self.waveform_image_analysis_controller.compute_mv_cursor(
-                    self.getLocalFilePath(), CalculationConstants.SAT_MODE
-                ) 
-                logging.info(f"Current mV Value for current waveform: {mv} mV")
-
-                if mv > highest_mv:
-                    highest_mv = mv
-                    highest_cursor = cursor
-                    highest_channel = i
-
-        # capture a new image as result
         with FTPSession(self.ftp_client) as ftp_client:
             await LV5600Tasks.capture_n_send_bmp(
                 self.telnet_client, ftp_client, local_file_path
             )
-        self.app_config.set_target_saturation(highest_mv)
-        self.app_config.save_config_to_file()
-        # put the cursor on the target saturation
-        await LV5600Tasks.scale_and_cursor(self.telnet_client, True, highest_cursor)
-        # display in graphics view
-        pixmap = QPixmap(local_file_path)
-        self.display_image_and_title(pixmap, "Target Saturation mV: " + str(highest_mv))
-        logging.info(f"Target saturation set to {highest_mv} mV")
-        await LV5600Tasks.rgb_change(self.telnet_client, highest_channel)
+            mv, cursor = self.waveform_image_analysis_controller.compute_mv_cursor(
+                self.getLocalFilePath(), CalculationConstants.SAT_MODE
+            ) 
+            self.app_config.set_target_saturation(mv)
+            self.app_config.save_config_to_file()
+            # put the cursor on the target saturation
+            await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
+            # display in graphics view
+            pixmap = QPixmap(local_file_path)
+            self.display_image_and_title(pixmap, "Target Saturation mV: " + str(mv))
+            logging.info(f"Target saturation set to {mv} mV")
 
     @asyncSlot()
     async def clicked_capture_n_classify(self, mode="SAT", message=None):
         logging.info("Capturing and classifying SAT")
-        await LV5600Tasks.rgb_on(self.telnet_client)
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
         )
-        # turn off scale and cursor
-        await LV5600Tasks.scale_and_cursor(self.telnet_client, False)
-
-        # loop through R G B
-        highest_mv = 0
-        highest_cursor = 0
-        highest_channel = 0
-        for i in range(3):
-            await LV5600Tasks.rgb_change(self.telnet_client, i)
-            with FTPSession(self.ftp_client) as ftp_client:
-                await LV5600Tasks.capture_n_send_bmp(
-                    self.telnet_client, ftp_client, local_file_path
-                )
-                mv, cursor = self.waveform_image_analysis_controller.compute_mv_cursor(
-                    self.getLocalFilePath(), CalculationConstants.SAT_MODE
-                ) 
-                logging.debug(f"Current mV Value for current waveform: {mv} mV")
-            
-                if mv > highest_mv:
-                    highest_mv = mv
-                    highest_cursor = cursor
-                    highest_channel = i
-        
-        logging.info(f"Highest Channel:"+ "R" if highest_channel == 0 else "G" if highest_channel == 1 else "B")
-        await LV5600Tasks.rgb_change(self.telnet_client, highest_channel)
         mv, cursor, sd = await self.compute_average_mv_sd(CalculationConstants.SAT_MODE) 
         target = self.app_config.get_target_saturation()
         tolerance = self.app_config.get_target_tolerance()
@@ -504,10 +454,6 @@ class MyGUI(QMainWindow):
         else:
             logging.error("Classification Result is:" + str(class_))
             class_ = "Unknown"
-
-        # turn on RGB
-        await LV5600Tasks.rgb_on(self.telnet_client)
-
         # capture a new image as result
         with FTPSession(self.ftp_client) as ftp_client:
             await LV5600Tasks.capture_n_send_bmp(
@@ -584,7 +530,6 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_auto_wb(self):
-        await LV5600Tasks.rgb_only_green(self.telnet_client)
         logging.info("-------------------- Capturing N1 Value --------------------")
         mv, cursor, sd = await self.compute_average_mv_sd(
             CalculationConstants.NOISE_MODE
@@ -610,7 +555,6 @@ class MyGUI(QMainWindow):
 
     @asyncSlot()
     async def clicked_auto_adjust_sat(self):
-        await LV5600Tasks.rgb_on(self.telnet_client)
         await self.clicked_capture_sat_value()
         logging.info("-------------------- Auto Adjust Saturation --------------------")
         final_mv = 0
@@ -695,25 +639,12 @@ class MyGUI(QMainWindow):
         self.display_image_and_title(
                     QPixmap(self.getLocalFilePath()), "Just Saturated"
                 )
-        
-        await LV5600Tasks.rgb_on(self.telnet_client)
-
-        # capture a new image as result
-        with FTPSession(self.ftp_client) as ftp_client:
-            await LV5600Tasks.capture_n_send_bmp(
-                self.telnet_client, ftp_client, self.getLocalFilePath()
-            )
-        # display in graphics view
-        pixmap = QPixmap(self.getLocalFilePath())
-        self.display_image_and_title(pixmap, "Just Saturated")
-
         logging.info(
             "-------------------- Auto Adjust Saturation Done --------------------"
         )
 
     @asyncSlot()
     async def clicked_auto_adjust_noise(self, offset):
-        await LV5600Tasks.rgb_only_green(self.telnet_client)
         logging.info("-------------------- Setting Noise Value --------------------")
 
         light_level_upper_bound = 256

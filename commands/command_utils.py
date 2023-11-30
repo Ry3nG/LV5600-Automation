@@ -45,6 +45,17 @@ class WFMCommand:
         return "WFM:MODE:RGB:" + channel + " " + input
 
     @staticmethod
+    def wfm_mode_ycbcr(channel, input):
+        # check if channel is Y or Cb or Cr
+        if channel != "Y" and channel != "CB" and channel != "CR":
+            raise ValueError("Invalid channel. Channel must be Y, Cb or Cr.")
+        # check if input is valid
+        if input != "ON" and input != "OFF" and input != "?":
+            raise ValueError("Invalid input. Input must be ON, OFF or ?.")
+
+        return "WFM:MODE:YCBCR:" + channel + " " + input
+
+    @staticmethod
     def wfm_cursor(input):
         # check input is valid
         if input != "SINGLE" and input != "BOTH" and input != "OFF":

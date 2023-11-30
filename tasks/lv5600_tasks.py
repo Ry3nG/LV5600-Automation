@@ -31,7 +31,7 @@ class LV5600Tasks:
             raise Exception("Error setting waveform line number: " + str(e))
     
         try:
-            response = await telnet_client.send_command(WFMCommand.wfm_matrix_ycbcr("RGB"))
+            response = await telnet_client.send_command(WFMCommand.wfm_matrix_ycbcr("YCBCR"))
             logging.debug("The response is " + str(response))
         except Exception as e:
             logging.debug("The response is " + str(response))
@@ -57,6 +57,28 @@ class LV5600Tasks:
         except Exception as e:
             logging.debug("The response is " + str(response))
             raise Exception("Error setting waveform mode: " + str(e))
+        
+        try:
+            response = await telnet_client.send_command(WFMCommand.wfm_mode_ycbcr("Y","ON"))
+            logging.debug("The response is " + str(response))
+        except Exception as e:
+            logging.debug("The response is " + str(response))
+            raise Exception("Error setting waveform mode: " + str(e))
+        
+        try:
+            response = await telnet_client.send_command(WFMCommand.wfm_mode_ycbcr("CB","OFF"))
+            logging.debug("The response is " + str(response))
+        except Exception as e:
+            logging.debug("The response is " + str(response))
+            raise Exception("Error setting waveform mode: " + str(e))
+        
+        try:
+            response = await telnet_client.send_command(WFMCommand.wfm_mode_ycbcr("CR","OFF"))
+            logging.debug("The response is " + str(response))
+        except Exception as e:
+            logging.debug("The response is " + str(response))
+            raise Exception("Error setting waveform mode: " + str(e))
+
         
         try:
             response = await telnet_client.send_command(WFMCommand.wfm_cursor("SINGLE"))
