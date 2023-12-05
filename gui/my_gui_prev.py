@@ -111,7 +111,6 @@ class MyGUI(QMainWindow):
 
         self.debug_console_controller = DebugConsoleController()
 
-       
         self.wb_n1_value = -1
 
         # initialize the log handler
@@ -161,13 +160,13 @@ class MyGUI(QMainWindow):
         self.pushButton_mask_mode.clicked.connect(self.clicked_mask_mode)
         self.pushButton_light_setting.clicked.connect(self.clicked_light_setting)
         self.pushButton_auto_adjust_n1.clicked.connect(
-            partial(self.clicked_auto_adjust_noise, offset = 0)
+            partial(self.clicked_auto_adjust_noise, offset=0)
         )
         self.pushButton_auto_adjust_n1_plus20.clicked.connect(
-            partial(self.clicked_auto_adjust_noise, offset = 20)
+            partial(self.clicked_auto_adjust_noise, offset=20)
         )
         self.pushButton_auto_adjust_n1_minus20.clicked.connect(
-            partial(self.clicked_auto_adjust_noise, offset = -20)
+            partial(self.clicked_auto_adjust_noise, offset=-20)
         )
         self.pushButton_terminate.clicked.connect(self.clicked_terminate)
 
@@ -360,7 +359,9 @@ class MyGUI(QMainWindow):
             return
 
     @asyncSlot()
-    async def clicked_capture_n_send_bmp(self, mode=CalculationConstants.SAT_MODE, message=None): 
+    async def clicked_capture_n_send_bmp(
+        self, mode=CalculationConstants.SAT_MODE, message=None
+    ):
         logging.info(
             "-------------------- Capturing and sending BMP --------------------"
         )
@@ -413,7 +414,7 @@ class MyGUI(QMainWindow):
             )
             mv, cursor = self.waveform_image_analysis_controller.compute_mv_cursor(
                 self.getLocalFilePath(), CalculationConstants.SAT_MODE
-            ) 
+            )
             self.app_config.set_target_saturation(mv)
             self.app_config.save_config_to_file()
             # put the cursor on the target saturation
@@ -429,7 +430,7 @@ class MyGUI(QMainWindow):
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(), FTPConstants.LOCAL_FILE_NAME_BMP
         )
-        mv, cursor, sd = await self.compute_average_mv_sd(CalculationConstants.SAT_MODE) 
+        mv, cursor, sd = await self.compute_average_mv_sd(CalculationConstants.SAT_MODE)
         target = self.app_config.get_target_saturation()
         tolerance = self.app_config.get_target_tolerance()
         flat_sv_threshold = self.app_config.get_flatness_check_sv_threshold()
@@ -439,8 +440,8 @@ class MyGUI(QMainWindow):
             target,
             tolerance,
             flat_sv_threshold,
-            CalculationConstants.SAT_MODE, 
-        ) 
+            CalculationConstants.SAT_MODE,
+        )
 
         # put the cursor on the waveform
         await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
@@ -469,14 +470,13 @@ class MyGUI(QMainWindow):
             self.display_image_and_title(pixmap, message)
         logging.info("SAT captured and classified")
 
-
     def getLocalFilePath(self):
         local_file_path = os.path.join(
             self.app_config.get_local_file_path(),
             FTPConstants.LOCAL_FILE_NAME_BMP,
         )
         return local_file_path
-    
+
     @asyncSlot()
     async def capture_image_to_local(self):
         with FTPSession(self.ftp_client) as ftp_client:
@@ -488,11 +488,7 @@ class MyGUI(QMainWindow):
             await LV5600Tasks.scale_and_cursor(self.telnet_client, True)
 
     @asyncSlot()
-    async def compute_average_mv_sd(
-        self,
-        mode,
-        num_sample = 3
-    ):
+    async def compute_average_mv_sd(self, mode, num_sample=3):
         total_mv = 0
         max_sd = 0
         for i in range(num_sample):
@@ -580,7 +576,7 @@ class MyGUI(QMainWindow):
                 logging.info("Handing over to precision mode")
                 final_mv = await self.adjust_light_level_precisely(
                     CalculationConstants.SAT_MODE, middle_light_level, target
-                ) 
+                )
                 break
 
             self.debug_console_controller.set_light_level(middle_light_level)
@@ -597,11 +593,8 @@ class MyGUI(QMainWindow):
                     CalculationConstants.SAT_MODE, 1
                 )
                 self.display_image_and_title(
-                    QPixmap(self.getLocalFilePath()), "Current mV:"+str(mv)
+                    QPixmap(self.getLocalFilePath()), "Current mV:" + str(mv)
                 )
-
-                
-                
 
             final_mv = mv
             await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
@@ -636,9 +629,7 @@ class MyGUI(QMainWindow):
         await LV5600Tasks.capture_n_send_bmp(
             self.telnet_client, self.ftp_client, self.getLocalFilePath()
         )
-        self.display_image_and_title(
-                    QPixmap(self.getLocalFilePath()), "Just Saturated"
-                )
+        self.display_image_and_title(QPixmap(self.getLocalFilePath()), "Just Saturated")
         logging.info(
             "-------------------- Auto Adjust Saturation Done --------------------"
         )
@@ -686,9 +677,8 @@ class MyGUI(QMainWindow):
                     CalculationConstants.SAT_MODE, 1
                 )
                 self.display_image_and_title(
-                    QPixmap(self.getLocalFilePath()), "Current mV: "+ str(mv)
+                    QPixmap(self.getLocalFilePath()), "Current mV: " + str(mv)
                 )
-                
 
             final_mv = mv
             await LV5600Tasks.scale_and_cursor(self.telnet_client, True, cursor)
@@ -709,7 +699,6 @@ class MyGUI(QMainWindow):
             elif class_ == 1:
                 light_level_lower_bound = middle_light_level
             elif class_ == 2:
-                
                 self.display_image_and_title(
                     QPixmap(self.getLocalFilePath()), "Noise Value Set"
                 )
@@ -734,8 +723,6 @@ class MyGUI(QMainWindow):
             QPixmap(self.getLocalFilePath()), "Current mV: " + str(final_mv)
         )
         logging.info("-------------------- Noise Value Set --------------------")
-
-
 
     @asyncSlot()
     async def adjust_light_level_precisely(self, mode, current_light_level, target):
@@ -824,7 +811,6 @@ class MyGUI(QMainWindow):
                 logging.info("Target has reached, returning to previous handler")
                 return final_mv
 
-
     def clicked_sat_mode(self):
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
@@ -846,14 +832,22 @@ class MyGUI(QMainWindow):
             logging.info("WLI mode selected")
             self.debug_console_controller.set_AGC_mode("WLI")
             self.label_SAT_mode.setText("WLI")
+            self.app_config.set_wli_default_settings()
+            logging.info("WLI default settings loaded")
         elif msgBox.clickedButton() == NBIButton:
             logging.info("NBI mode selected")
             self.debug_console_controller.set_AGC_mode("NBI")
             self.label_SAT_mode.setText("NBI")
+            self.app_config.set_nbi_default_settings()
+            logging.info("NBI default settings loaded")
+
         elif msgBox.clickedButton() == RDIButton:
             logging.info("RDI mode selected")
             self.debug_console_controller.set_AGC_mode("RDI")
             self.label_SAT_mode.setText("RDI")
+            self.app_config.set_rdi_default_settings()
+            logging.info("RDI default settings loaded")
+
         elif msgBox.clickedButton() == OnButton:
             logging.info("AGC On mode selected")
             self.debug_console_controller.set_AGC_mode("ON")

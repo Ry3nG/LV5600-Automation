@@ -180,3 +180,27 @@ class AppConfig(QtCore.QObject):
     
     def get_version(self):
         return self.config.get("version", "version")
+    
+    def set_wli_default_settings(self):
+        self.set_target_tolerance(0.015)
+        self.set_target_saturation(763.3)
+        self.set_flatness_check_pixel(100)
+        self.set_flatness_check_sv_threshold(1.5)
+        self.set_line_number(580)
+        self.save_config_to_file()
+
+    def set_nbi_default_settings(self):
+        self.set_target_tolerance(0.015)
+        self.set_target_saturation(763.3)
+        self.set_flatness_check_pixel(100)
+        self.set_flatness_check_sv_threshold(1.5)
+        self.set_line_number(580)
+        self.save_config_to_file()
+
+    def set_rdi_default_settings(self):
+        self.set_target_tolerance(0.015)
+        self.set_target_saturation(763.3)
+        self.set_flatness_check_pixel(100)
+        self.set_flatness_check_sv_threshold(7.5)
+        self.set_line_number(580)
+        self.save_config_to_file()
