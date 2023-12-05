@@ -915,14 +915,20 @@ class MyGUI(QMainWindow):
             logging.info("WLI mode selected")
             self.debug_console_controller.set_AGC_mode("WLI")
             self.label_SAT_mode.setText("WLI")
+            self.app_config.set_wli_default_settings()
+            logging.info("WLI default settings loaded")
         elif msgBox.clickedButton() == NBIButton:
             logging.info("NBI mode selected")
             self.debug_console_controller.set_AGC_mode("NBI")
             self.label_SAT_mode.setText("NBI")
+            self.app_config.set_nbi_default_settings()
+            logging.info("NBI default settings loaded")
         elif msgBox.clickedButton() == RDIButton:
             logging.info("RDI mode selected")
             self.debug_console_controller.set_AGC_mode("RDI")
             self.label_SAT_mode.setText("RDI")
+            self.app_config.set_rdi_default_settings()
+            logging.info("RDI default settings loaded")
         elif msgBox.clickedButton() == OnButton:
             logging.info("AGC On mode selected")
             self.debug_console_controller.set_AGC_mode("ON")
