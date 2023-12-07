@@ -65,6 +65,7 @@ Some of the most important files to understand include:
 4. Start a virtual environment using `python -m venv venv`, then activate it using `.\venv\Scripts\activate ` (Windows)
 5. Install the required packages using `pip install -r requirements.txt`
 6. Run the application using `python main.py`
+7. Build EXE using command `pyinstaller LV5600_Automation.spec`
 
 ### Configuration
 The application configuration is stored in `config/config.ini`, it includes default settings for Telnet and FTP Servers, the default path for the snapshot image, as well as user-defined parameters.
